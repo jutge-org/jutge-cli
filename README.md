@@ -6,7 +6,7 @@ This is a command line interface for the Jutge platform. It allows you to downlo
 
 ```bash
 bun index.ts --help             # get help
-bun index.ts api misc fortune   # test
+bun index.ts misc fortune       # test
 bun index.ts init               # configure
 bun index.ts login              # login to Jutge.org
 bun index.ts profile            # display user profile
