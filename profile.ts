@@ -5,5 +5,6 @@ import { ensure_credentials } from './base'
 
 export const profileCmd = new Command('profile').description('Show profile').action(async () => {
     ensure_credentials()
-    print.showResponse(axios.get('/my/profile'))
+    const { data } = await axios.get('/my/profile')
+    print.verticalTable(data)
 })

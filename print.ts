@@ -1,5 +1,6 @@
 import type { AxiosResponse } from 'axios'
 import chalk from 'chalk'
+import Table from 'cli-table3'
 
 export default {
     showResponse: async (promise: Promise<AxiosResponse<any, any>>) => {
@@ -31,5 +32,13 @@ export default {
 
     primary: (s: string) => {
         console.log(chalk.blue(s))
+    },
+
+    verticalTable: (data: any) => {
+        var table = new Table()
+        for (const key in data) {
+            table.push({ [key]: data[key] })
+        }
+        console.log(table.toString())
     },
 }
