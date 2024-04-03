@@ -1,6 +1,6 @@
 import { Command } from '@commander-js/extra-typings'
 import axios from 'axios'
-import { showResponse } from '@/format'
+import print from '@/print'
 
 export const tablesCmd = new Command('tables').description('Get tables')
 
@@ -11,6 +11,6 @@ for (const table of tables) {
         .command(table)
         .description(`Display ${table} table`)
         .action(async () => {
-            showResponse(axios.get(`/tables/${table}`))
+            print.showResponse(axios.get(`/tables/${table}`))
         })
 }
