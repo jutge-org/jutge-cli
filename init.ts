@@ -8,7 +8,7 @@ import terminalImage from 'terminal-image'
 import terminalLink from 'terminal-link'
 
 // @ts-ignore
-import jutgePng from './jutge.png'
+import jutgePng from './media/jutge.png'
 
 export const initCmd = new Command('init').description('Initialize jutge-cli').action(async () => {
     await welcome()

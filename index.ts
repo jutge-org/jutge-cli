@@ -9,6 +9,7 @@ import { loginCmd } from './login'
 import { checkLoginCmd } from './check-login'
 import { logoutCmd } from './logout'
 import { profileCmd } from './profile'
+import { submitCmd } from './submit'
 import axios from 'axios'
 
 axios.defaults.baseURL = 'https://api.jutge.org'
@@ -26,4 +27,5 @@ new Command()
     .addCommand(checkLoginCmd)
     .addCommand(profileCmd)
     .addCommand(doctorCmd)
+    .addCommand(submitCmd)
     .parse()

@@ -10,6 +10,7 @@ bun index.ts misc fortune       # test
 bun index.ts init               # configure
 bun index.ts login              # login to Jutge.org
 bun index.ts profile            # display user profile
+bun index.ts submit P68688_en tests/P68688.c   # submit a solution
 ```
 
 ## Installation
