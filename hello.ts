@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import { Command } from '@commander-js/extra-typings'
 import terminalImage from 'terminal-image'
 import terminalLink from 'terminal-link'
 import gradient from 'gradient-string'

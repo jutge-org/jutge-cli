@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import { Command } from '@commander-js/extra-typings'
 import axios from 'axios'
 import { showResponse } from '@/format'
 
