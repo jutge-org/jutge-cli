@@ -15,7 +15,7 @@ export const doctorCmd = new Command('doctor')
         }
 
         const spinner = ora({
-            text: 'Pretending to think...',
+            text: 'Pretending to do something useful...',
             color: 'green',
             spinner: 'dots',
         })

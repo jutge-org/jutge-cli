@@ -8,7 +8,7 @@ testCmd
     .command('ping')
     .description('Ping to get a Pong')
     .action(async (str) => {
-        print.normal(await TestService.getTestPing())
+        print.normal(await TestService.ping())
     })
 
 testCmd
@@ -16,12 +16,12 @@ testCmd
     .description('Get string in uppercase')
     .argument('<string>', 'String to convert to uppercase')
     .action(async (str) => {
-        print.normal(await TestService.getTestUpper({ str }))
+        print.normal(await TestService.upper({ str }))
     })
 
 testCmd
     .command('do-not-try')
     .description('Do not try')
     .action(async () => {
-        print.normal(await TestService.getTestDoNotTry())
+        print.normal(await TestService.doNotTry())
     })

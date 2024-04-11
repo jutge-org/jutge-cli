@@ -8,19 +8,19 @@ miscCmd
     .command('time')
     .description('Display server time')
     .action(async () => {
-        print.normal(await MiscService.getMiscTime())
+        print.normal(await MiscService.getTime())
     })
 
 miscCmd
     .command('fortune')
     .description('Display a fortune cookie')
     .action(async () => {
-        print.normal(await MiscService.getMiscFortune())
+        print.normal(await MiscService.getFortune())
     })
 
 miscCmd
     .command('homepage-statistics')
     .description('Get homepage statistics​')
     .action(async () => {
-        print.normal(await MiscService.getMiscHomepageStatistics())
+        print.normal(await MiscService.getHomepageStatistics())
     })

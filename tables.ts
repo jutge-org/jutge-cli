@@ -8,40 +8,40 @@ tablesCmd
     .command('languages')
     .description(`Display languages table`)
     .action(async () => {
-        print.normal(await TablesService.getTablesLanguages())
+        print.normal(await TablesService.getAllLanguages())
     })
 
 tablesCmd
     .command('countries')
     .description(`Display countries table`)
     .action(async () => {
-        print.normal(await TablesService.getTablesCountries())
+        print.normal(await TablesService.getAllCountries())
     })
 
 tablesCmd
     .command('compilers')
     .description(`Display compilers table`)
     .action(async () => {
-        print.normal(await TablesService.getTablesCompilers())
+        print.normal(await TablesService.getAllCompilers())
     })
 
 tablesCmd
     .command('drivers')
     .description(`Display drivers table`)
     .action(async () => {
-        print.normal(await TablesService.getTablesDrivers())
+        print.normal(await TablesService.getAllDrivers())
     })
 
 tablesCmd
     .command('verdicts')
     .description(`Display verdicts table`)
     .action(async () => {
-        print.normal(await TablesService.getTablesVerdicts())
+        print.normal(await TablesService.getAllVerdicts())
     })
 
 tablesCmd
     .command('proglangs')
     .description(`Display proglangs table`)
     .action(async () => {
-        print.normal(await TablesService.getTablesProglangs())
+        print.normal(await TablesService.getAllProglangs())
     })
