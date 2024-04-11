@@ -1,37 +1,25 @@
-import type { AxiosResponse } from 'axios'
 import chalk from 'chalk'
 import Table from 'cli-table3'
 
 export default {
-    showResponse: async (promise: Promise<AxiosResponse<any, any>>) => {
-        const response = await promise
-        if (response.status !== 200) {
-            console.error(`Error: ${response.status} ${response.statusText}`)
-        } else if (response.data.message !== undefined) {
-            console.log(response.data.message)
-        } else {
-            console.log(response.data)
-        }
+    normal: (x: any) => {
+        console.log(x)
     },
 
-    normal: (s: string) => {
-        console.log(s)
+    error: (x: any) => {
+        console.log(chalk.red(x))
     },
 
-    error: (s: string) => {
-        console.log(chalk.red(s))
+    warning: (x: any) => {
+        console.log(chalk.yellow(x))
     },
 
-    warning: (s: string) => {
-        console.log(chalk.yellow(s))
+    success: (x: any) => {
+        console.log(chalk.green(x))
     },
 
-    success: (s: string) => {
-        console.log(chalk.green(s))
-    },
-
-    primary: (s: string) => {
-        console.log(chalk.blue(s))
+    primary: (x: any) => {
+        console.log(chalk.blue(x))
     },
 
     verticalTable: (data: any) => {

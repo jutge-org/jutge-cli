@@ -3,6 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.38.0",
     "@types/bun": "latest",
     "@types/chalk": "^2.2.0",
     "@types/conf": "^3.0.0",
@@ -25,12 +26,15 @@
     "dayjs": "^1.11.10",
     "figlet": "^1.7.0",
     "gradient-string": "^2.0.2",
+    "jutge-cli": ".",
     "ora": "^8.0.1",
     "sound-play": "^1.1.0",
     "terminal-image": "^2.0.0",
     "terminal-link": "^3.0.0"
   },
   "scripts": {
+    "openapi-ts": "openapi-ts",
+    "make-client": "rm -rf client ; openapi-ts --base https://api.jutge.org --input https://api.jutge.org/openapi.json --output client",
     "compile": "bun build ./index.ts --compile --outfile bin/jutge"
   }
 }

@@ -1,9 +1,9 @@
 import { config } from '@/config'
 import { Command } from '@commander-js/extra-typings'
 import { input, password as pswd } from '@inquirer/prompts'
-import axios from 'axios'
 import print from './print'
 import { ensure_initialized } from './base'
+import { AuthenticationService } from './client'
 
 export const loginCmd = new Command('login').description('Login to Jutge.org').action(async () => {
     ensure_initialized()
@@ -13,8 +13,10 @@ export const loginCmd = new Command('login').description('Login to Jutge.org').a
         mask: true,
     })
     try {
-        const response = await axios.post('/authentication/login', { email, password })
-        config.set('credentials', response.data)
+        const credentials = await AuthenticationService.postAuthenticationLogin({
+            requestBody: { email, password },
+        })
+        config.set('credentials', credentials)
         print.success('Login successful')
     } catch (error) {
         print.error('Login unsuccessful')

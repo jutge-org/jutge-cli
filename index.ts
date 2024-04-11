@@ -1,18 +1,14 @@
 import { Command } from '@commander-js/extra-typings'
-import { config } from './config'
-import { initCmd } from './init'
-import { testCmd } from './test'
-import { miscCmd } from './misc'
-import { tablesCmd } from './tables'
-import { doctorCmd } from './doctor'
-import { loginCmd } from './login'
 import { checkLoginCmd } from './check-login'
+import { doctorCmd } from './doctor'
+import { initCmd } from './init'
+import { loginCmd } from './login'
 import { logoutCmd } from './logout'
+import { miscCmd } from './misc'
 import { profileCmd } from './profile'
 import { submitCmd } from './submit'
-import axios from 'axios'
-
-axios.defaults.baseURL = 'https://api.jutge.org'
+import { tablesCmd } from './tables'
+import { testCmd } from './test'
 
 new Command()
     .name('jutge')

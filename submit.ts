@@ -8,6 +8,8 @@ import print from './print'
 import path from 'path'
 import { sleep } from 'bun'
 
+// TODO: use client rather than axios, but I do not know how to do upload files with it.
+
 // TODO: fix
 // import successMp3 from '@/media/success.mp3'
 // import failureMp3 from '@/media/failure.mp3'

@@ -2,6 +2,14 @@
 
 This is a command line interface for the Jutge platform. It allows you to download problems, submit solutions, and check your progress.
 
+## Preparation
+
+In order to create the Jutge.org client:
+
+```bash
+bun make-client
+```
+
 ## Execution
 
 ```bash

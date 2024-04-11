@@ -1,6 +1,6 @@
-import axios from 'axios'
 import { config } from './config'
 import print from './print'
+import { OpenAPI } from './client'
 
 export async function ensure_initialized() {
     const init = config.get('init', false)
@@ -13,12 +13,12 @@ export async function ensure_initialized() {
 
 export async function ensure_credentials() {
     ensure_initialized()
-    const token = config.get('credentials.token', null)
+    const token = config.get('credentials.token', null) as string | null
     // TODO: Check if token is expired
     if (!token) {
         print.error('You are not logged in.')
         print.normal('Please run `jutge login` to log in.')
         process.exit(1)
     }
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
+    OpenAPI.TOKEN = token
 }
