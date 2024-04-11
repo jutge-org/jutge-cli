@@ -17,7 +17,7 @@ export async function ensure_credentials() {
     // TODO: Check if token is expired
     if (!token) {
         print.error('You are not logged in.')
-        print.normal('Please run `jutge login` to log in.')
+        print.normal('Please run `jutge auth login` to log in.')
         process.exit(1)
     }
     OpenAPI.TOKEN = token

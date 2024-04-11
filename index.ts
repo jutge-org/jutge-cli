@@ -1,9 +1,7 @@
 import { Command } from '@commander-js/extra-typings'
-import { checkLoginCmd } from './check-login'
+import { authCmd } from './auth'
 import { doctorCmd } from './doctor'
 import { initCmd } from './init'
-import { loginCmd } from './login'
-import { logoutCmd } from './logout'
 import { miscCmd } from './misc'
 import { profileCmd } from './profile'
 import { submitCmd } from './submit'
@@ -18,9 +16,7 @@ new Command()
     .addCommand(miscCmd)
     .addCommand(tablesCmd)
     .addCommand(initCmd)
-    .addCommand(loginCmd)
-    .addCommand(logoutCmd)
-    .addCommand(checkLoginCmd)
+    .addCommand(authCmd)
     .addCommand(profileCmd)
     .addCommand(doctorCmd)
     .addCommand(submitCmd)
