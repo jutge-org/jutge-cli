@@ -8,7 +8,7 @@ export const logoutCmd = new Command('logout')
     .action(async () => {
         ensure_credentials()
         try {
-            await AuthenticationService.postAuthenticationLogout()
+            await AuthenticationService.logout()
             config.delete('credentials')
             console.log('Logout successful')
         } catch (error) {

@@ -14,7 +14,7 @@ export const checkLoginCmd = new Command('check-login')
         try {
             const credentials = config.get('credentials', null) as any
             if (!credentials) throw new Error('Not logged in')
-            const data = await AuthenticationService.getAuthenticationCheck()
+            const data = await AuthenticationService.check()
             if (!data.success) throw new Error('Not logged in')
             const remaining = dayjs(credentials.expiration).from(dayjs())
             console.log(`You are logged in (expiration ${remaining})`)

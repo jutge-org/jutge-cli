@@ -13,7 +13,7 @@ export const loginCmd = new Command('login').description('Login to Jutge.org').a
         mask: true,
     })
     try {
-        const credentials = await AuthenticationService.postAuthenticationLogin({
+        const credentials = await AuthenticationService.login({
             requestBody: { email, password },
         })
         config.set('credentials', credentials)
