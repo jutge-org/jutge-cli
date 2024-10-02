@@ -1,10 +1,10 @@
-import { config } from '@/config'
+import { config } from './config'
 import { Command } from '@commander-js/extra-typings'
 import { password as pswd } from '@inquirer/prompts'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { ensure_credentials, ensure_initialized } from './base'
-import { AuthenticationService } from './client'
+import { AuthService } from './client'
 import print from './print'
 
 dayjs.extend(relativeTime)
@@ -22,7 +22,7 @@ authCmd
             mask: true,
         })
         try {
-            const credentials = await AuthenticationService.login({
+            const credentials = await AuthService.login({
                 requestBody: { email, password },
             })
             config.set('credentials', credentials)
@@ -38,7 +38,7 @@ authCmd
     .action(async () => {
         ensure_credentials()
         try {
-            await AuthenticationService.logout()
+            await AuthService.logout()
             config.delete('credentials')
             print.success('Logout successful')
         } catch (error) {
@@ -54,7 +54,7 @@ authCmd
         try {
             const credentials = config.get('credentials', null) as any
             if (!credentials) throw new Error('Not logged in')
-            const data = await AuthenticationService.check()
+            const data = await AuthService.check()
             if (!data.success) throw new Error('Not logged in')
             const remaining = dayjs(credentials.expiration).from(dayjs())
             print.success(`You are logged in (expiration ${remaining})`)

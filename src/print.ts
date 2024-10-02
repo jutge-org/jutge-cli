@@ -3,7 +3,7 @@ import Table from 'cli-table3'
 
 export default {
     normal: (x: any) => {
-        console.log(x)
+        console.log(JSON.stringify(x, null, 2))
     },
 
     error: (x: any) => {

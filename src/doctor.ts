@@ -1,6 +1,6 @@
 import { Command } from '@commander-js/extra-typings'
-import print from '@/print'
-import { config } from '@/config'
+import print from './print'
+import { config } from './config'
 import ora from 'ora'
 import { sleep } from 'bun'
 

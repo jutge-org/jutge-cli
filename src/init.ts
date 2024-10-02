@@ -1,5 +1,5 @@
-import { config } from '@/config'
-import print from '@/print'
+import { config } from './config'
+import print from './print'
 import { Command } from '@commander-js/extra-typings'
 import { confirm, input, select } from '@inquirer/prompts'
 import figlet from 'figlet'
@@ -8,7 +8,7 @@ import terminalImage from 'terminal-image'
 import terminalLink from 'terminal-link'
 
 // @ts-ignore
-import jutgePng from './media/jutge.png'
+import jutgePng from '../media/jutge.png'
 
 export const initCmd = new Command('init').description('Initialize jutge-cli').action(async () => {
     await welcome()
@@ -53,7 +53,7 @@ async function welcome() {
     console.log('')
     console.log(gradient('red', 'blue')(text))
     console.log('')
-    console.log(await terminalImage.buffer(jutgePng, { width: '50%', height: '50%' }))
+    // console.log(await terminalImage.buffer(jutgePng, { width: '50%', height: '50%' }))
     const link = terminalLink('https://jutge.org', 'https://jutge.org')
     console.log(link)
     console.log('')

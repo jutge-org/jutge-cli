@@ -15,6 +15,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@jutge/client-ts": "./modules/jutge-client-ts",
     "@commander-js/extra-typings": "^12.0.1",
     "@inquirer/prompts": "^4.3.1",
     "@types/ora": "^3.2.0",
@@ -33,8 +34,7 @@
     "terminal-link": "^3.0.0"
   },
   "scripts": {
-    "openapi-ts": "openapi-ts",
-    "make-client": "rm -rf client ; openapi-ts --base https://api.jutge.org --input https://api.jutge.org/openapi.json --output client",
-    "compile": "bun build ./index.ts --compile --outfile bin/jutge"
+    "generate-client": "openapi-ts",
+    "build": "bun build ./src/index.ts --compile --outfile bin/jutge"
   }
 }

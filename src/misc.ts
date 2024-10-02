@@ -1,5 +1,5 @@
 import { Command } from '@commander-js/extra-typings'
-import print from '@/print'
+import print from './print'
 import { MiscService } from './client'
 
 export const miscCmd = new Command('misc').description('Miscellaneous commands')
