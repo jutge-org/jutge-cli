@@ -8,12 +8,11 @@ const jom = new JutgeObjectModel()
 export const tablesCmd = new Command("tables").description("Get tables")
 
 const formattedPrintFunctions = {
-	json: print.json,
-	yaml: print.yaml,
-	table: print.table,
-	yml: print.yaml,
+    json: print.json,
+    yaml: print.yaml,
+    table: print.table,
+    yml: print.yaml,
 }
-
 
 for (const table of ["languages", "countries", "compilers", "drivers", "verdicts", "proglangs"]) {
     tablesCmd
@@ -25,7 +24,13 @@ for (const table of ["languages", "countries", "compilers", "drivers", "verdicts
             if (func) {
                 func(await jom[table].all())
             } else {
-                print.error(`Unknown format: ${options.f}\nValid formats are: ${Object.keys(formattedPrintFunctions).join(", ")}`)
+                const formats = Object.keys(formattedPrintFunctions)
+                print.error(
+                    [
+                        `Unknown format: ${options.f}\n`,
+                        `Valid formats are: ${formats.join(", ")}`,
+                    ].join()
+                )
             }
         })
 }
