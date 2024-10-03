@@ -25,7 +25,7 @@
     "dependencies": {
         "@commander-js/extra-typings": "^12.1.0",
         "@inquirer/prompts": "^4.3.3",
-        "@jutge.org/client-ts": "link:@jutge.org/client-ts",
+        "@jutge.org/client-ts": "^0.0.3",
         "@types/ora": "^3.2.0",
         "axios": "^1.7.7",
         "chalk": "^5.3.0",
