@@ -41,9 +41,7 @@ export const initCmd = new Command('init').description('Initialize jutge-cli').a
     })
 
     config.set('init', true)
-    config.set('user.name', name)
-    config.set('user.email', email)
-    config.set('user.type', type)
+    config.set('user', { name, email, type })
 
     print.success('\nThanks. Initialization successful.')
 })

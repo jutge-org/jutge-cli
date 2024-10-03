@@ -39,7 +39,7 @@
         "node-fetch": "^3.3.2",
         "ora": "^8.1.0",
         "sound-play": "^1.1.0",
-        "terminal-image": "^2.0.0",
+        "terminal-image": "^3.0.0",
         "terminal-link": "^3.0.0"
     },
     "scripts": {

@@ -1,12 +1,9 @@
-import { Command } from '@commander-js/extra-typings'
-import { ensure_credentials } from './base'
-import { StudentProfileService } from './client'
-import print from './print'
+import { Command } from "@commander-js/extra-typings"
+import { ensure_credentials } from "./base"
 
-export const profileCmd = new Command('profile').description('Show profile').action(async () => {
+export const profileCmd = new Command("profile").description("Show profile").action(async () => {
     ensure_credentials()
-    const data = await StudentProfileService.getProfile()
-    print.verticalTable(data)
-    const avatar = await StudentProfileService.getAvatar()
-    // TODO:   console.log(await terminalImage.buffer(avatar, { width: '50%', height: '50%' }))
+    // const avatar = await StudentProfileService.getAvatar()
+    // const buffer = await avatar.bytes()
+    // console.log(await terminalImage.buffer(buffer, { width: '50%', height: '50%' }))
 })
