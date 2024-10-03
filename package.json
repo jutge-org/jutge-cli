@@ -44,6 +44,7 @@
     },
     "scripts": {
         "generate-client": "openapi-ts",
+        "prebuild": "bun run generate-client",
         "build": "bun build ./src/index.ts --compile --outfile bin/jutge"
     },
     "publishConfig": {

@@ -1,32 +1,35 @@
 # Jutge Command Line Interface
 
-This is a command line interface for the Jutge platform. It allows you to download problems, submit solutions, and check your progress.
+This is a command line interface for the Jutge platform. 
 
-## Preparation
+WARNING: This is pre-alpha software, expect a rough experience.
 
-In order to create the Jutge.org client:
-
-```bash
-bun make-client
-```
-
-## Execution
-
-```bash
-bun index.ts --help             # get help
-bun index.ts misc fortune       # test
-bun index.ts init               # configure
-bun index.ts login              # login to Jutge.org
-bun index.ts profile            # display user profile
-bun index.ts submit P68688_en tests/P68688.c   # submit a solution
-```
+Eventually, it will allow you to download problems, submit solutions, and check your progress, and in general perform operations in the Jutge.org platform.
 
 ## Installation
 
-Run
+Jutge CLI is at [NPM](https://www.npmjs.com/package/@jutge.org/cli), so the easiest way to get it is:
 
 ```bash
-bun run compile
+bun add -g @jutge.org/cli
 ```
 
-to get a binary file in the `bin` folder.
+After that, you will have an executable called `jutge` in your `PATH`.
+
+You don't even need to have installed permanently:
+
+```bash
+bunx @jutge.org/cli misc fortune
+```g
+
+## Installing from source
+
+Install [Bun](https://bun.sh), clone this repo and run:
+
+```bash
+bun run build
+```
+
+Then get the binary file from the `bin` folder.
+
+
