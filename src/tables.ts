@@ -1,9 +1,6 @@
 import { Command } from "@commander-js/extra-typings"
 import print from "./print"
-
-import { JutgeObjectModel } from "@jutge.org/client-ts"
-
-const jom = new JutgeObjectModel()
+import { jom } from "./jom"
 
 export const tablesCmd = new Command("tables").description("Get tables")
 
