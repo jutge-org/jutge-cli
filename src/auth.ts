@@ -2,7 +2,7 @@ import { Command } from "@commander-js/extra-typings"
 import { password as pswd } from "@inquirer/prompts"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import { ensure_credentials, ensure_initialized } from "./base"
+import { ensure_initialized } from "./base"
 import { config } from "./config"
 import { jom } from "./jom"
 import print from "./print"
@@ -34,7 +34,6 @@ authCmd
     .command("logout")
     .description("Logout from Jutge.org")
     .action(async () => {
-        ensure_credentials()
         await jom.auth.logout()
         print.success("Logout successful")
     })
@@ -43,7 +42,6 @@ authCmd
     .command("check")
     .description("Check if logged in at Jutge.org")
     .action(async () => {
-        ensure_credentials()
         const { success, error, expiresIn } = await jom.auth.check()
         if (success) {
             print.success(`You are logged in (expiration in ${expiresIn})`)

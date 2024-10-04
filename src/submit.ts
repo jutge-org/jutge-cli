@@ -1,12 +1,11 @@
-import sound from 'sound-play'
-import ora from 'ora'
 import { Command } from '@commander-js/extra-typings'
 import axios from 'axios'
-import terminalLink from 'terminal-link'
-import { ensure_credentials } from './base'
-import print from './print'
-import path from 'path'
 import { sleep } from 'bun'
+import ora from 'ora'
+import path from 'path'
+import sound from 'sound-play'
+import terminalLink from 'terminal-link'
+import print from './print'
 
 // TODO: use client rather than axios, but I do not know how to do upload files with it.
 
@@ -23,8 +22,6 @@ export const submitCmd = new Command('submit')
     .option('-s, --silent', 'Do not play sound after verdict')
     .option('-n, --no-wait', 'Do not wait for verdict')
     .action(async (problem, file, options) => {
-        ensure_credentials()
-
         try {
             const problem_nm = problem.split('_')[0]
             const problem_id = problem
