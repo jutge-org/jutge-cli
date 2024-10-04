@@ -6,13 +6,14 @@ import { miscCmd } from './misc'
 import { profileCmd } from './profile'
 import { submitCmd } from './submit'
 import { tablesCmd } from './tables'
-import { testCmd } from './test'
+import { pingCmd } from './ping'
+import { version } from '../package.json'
 
 new Command()
     .name('jutge')
     .description('Jutge.org CLI')
-    .version('0.0.1')
-    .addCommand(testCmd)
+    .version(version)
+    .addCommand(pingCmd)
     .addCommand(miscCmd)
     .addCommand(tablesCmd)
     .addCommand(initCmd)

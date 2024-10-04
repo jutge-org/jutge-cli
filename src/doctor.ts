@@ -9,7 +9,7 @@ export const doctorCmd = new Command('doctor')
     .action(async () => {
         const init = config.get('init', false)
         if (!init) {
-            print.error('jutge-cli not initialized.')
+            print.error('@jutge.org/cli not initialized.')
             print.normal('Please run `jutge init` to fix it.')
             process.exit(1)
         }

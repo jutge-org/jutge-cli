@@ -34,6 +34,7 @@ authCmd
     .command("logout")
     .description("Logout from Jutge.org")
     .action(async () => {
+        ensure_initialized()
         await jom.auth.logout()
         print.success("Logout successful")
     })
@@ -42,6 +43,7 @@ authCmd
     .command("check")
     .description("Check if logged in at Jutge.org")
     .action(async () => {
+        ensure_initialized()
         const { success, error, expiresIn } = await jom.auth.check()
         if (success) {
             print.success(`You are logged in (expiration in ${expiresIn})`)
