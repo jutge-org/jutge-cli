@@ -1,26 +1,22 @@
-import { config } from './config'
-import print from './print'
 import { Command } from '@commander-js/extra-typings'
 import { confirm, input, select } from '@inquirer/prompts'
 import figlet from 'figlet'
 import gradient from 'gradient-string'
-import terminalImage from 'terminal-image'
 import terminalLink from 'terminal-link'
+import { config } from './config'
+import print from './print'
 
-// @ts-ignore
-import jutgePng from '../media/jutge.png'
-
-export const initCmd = new Command('init').description('Initialize jutge-cli').action(async () => {
+export const initCmd = new Command('init').description('Initialize @jutge.org/cli').action(async () => {
     await welcome()
 
     const init = config.get('init', false)
     if (init) {
-        print.warning('jutge-cli is already configured.')
+        print.warning('@jutge.org/cli is already configured.')
         const reinit = await confirm({ message: 'Do you wish to reconfigure it?' })
         if (!reinit) return
     }
 
-    print.normal("Let's configure jutge-cli.")
+    print.normal("Let's configure @jutge.org/cli.")
     const name = await input({
         message: "What's your name?",
         default: config.get('user.name', '') as string,
