@@ -4,7 +4,7 @@ import yaml from 'yaml'
 
 export default {
     normal(x: any) {
-        console.log(JSON.stringify(x, null, 2))
+        console.log(x)
     },
 
     error(x: any) {
