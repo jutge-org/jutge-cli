@@ -1,24 +1,20 @@
-import { Command } from '@commander-js/extra-typings'
-import { authCmd } from './auth'
-import { doctorCmd } from './doctor'
-import { initCmd } from './init'
-import { miscCmd } from './misc'
-import { profileCmd } from './profile'
-import { submitCmd } from './submit'
-import { tablesCmd } from './tables'
-import { pingCmd } from './ping'
-import { version } from '../package.json'
+import { Command } from "@commander-js/extra-typings"
+import { version } from "../package.json"
+import { loadDirectory } from "./directory/load-directory"
+import { moduleCommand } from "./module-cmd"
+import { versionCmd } from "./version"
 
-new Command()
-    .name('jutge')
-    .description('Jutge.org CLI')
-    .version(version)
-    .addCommand(pingCmd)
-    .addCommand(miscCmd)
-    .addCommand(tablesCmd)
-    .addCommand(initCmd)
-    .addCommand(authCmd)
-    .addCommand(profileCmd)
-    .addCommand(doctorCmd)
-    .addCommand(submitCmd)
-    .parse()
+const directory = await loadDirectory()
+
+const jutgeCli = new Command()
+    .name("jutge")
+    .description("Jutge.org CLI")
+    .version(version, "--version", "Show the Jutge.org/cli version")
+
+jutgeCli.addCommand(versionCmd)
+
+for (const module of directory.root.submodules) {
+    jutgeCli.addCommand(moduleCommand(module, ""))
+}
+
+jutgeCli.parse()
