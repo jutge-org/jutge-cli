@@ -33,7 +33,7 @@ export const yaml = (data: any) => {
     console.log(yml.stringify(data))
 }
 
-export const table = (data: Record<string, Record<string, any>>) => {
+export const printTable = (data: Record<string, Record<string, any>>) => {
     const MAX_COL_WIDTH = 70
     const numItems = Object.keys(data).length
     if (numItems > 0) {
@@ -57,4 +57,47 @@ export const table = (data: Record<string, Record<string, any>>) => {
         // Print it
         console.log(table.toString())
     }
+}
+
+export const printObject = (data: Record<string, any>) => {
+    const MAX_COL_WIDTH = 70
+    const numItems = Object.keys(data).length
+    if (numItems > 0) {
+        const [first, ...rest] = Object.entries(data)
+
+        // Compute the maximum widths and truncate them if they are too long
+        let [key, value] = first
+        let maxWidths = [key.length + 2, String(value).length + 2]
+        for (const [key, value] of rest) {
+            maxWidths = [
+                Math.max(maxWidths[0], key.length + 2),
+                Math.max(maxWidths[1], String(value).length + 2),
+            ]
+        }
+        const colWidths = maxWidths.map((x) => Math.min(x, MAX_COL_WIDTH))
+
+        // Create the table and fill it
+        const table = new Table({ wordWrap: true, colWidths })
+        for (const [key, value] of [first, ...rest]) {
+            table.push([key, value])
+        }
+
+        // Print it
+        console.log(table.toString())
+    }
+}
+
+export const isTableData = (data: any) => {
+    if (typeof data !== "object") {
+        return false
+    }
+    if (Array.isArray(data)) {
+        return false
+    }
+    for (const key in data) {
+        if (typeof data[key] !== "object") {
+            return false
+        }
+    }
+    return true
 }
