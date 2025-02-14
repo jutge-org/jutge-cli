@@ -23,14 +23,34 @@ export const jsonSchema2Typebox = (schema: any): TSchema => {
     } else if (schema.type === "array") {
         return Type.Array(jsonSchema2Typebox(schema.items))
     } else if (schema.type === "string") {
-        return Type.String()
+        return Type.String({
+            default: schema.default,
+            description: schema.description,
+            param: schema.param,
+            examples: schema.examples,
+        })
     } else if (schema.type === "number" || schema.type === "integer") {
-        return Type.Number()
+        return Type.Number({
+            default: schema.default,
+            description: schema.description,
+            param: schema.param,
+            examples: schema.examples,
+        })
     } else if (schema.type === "boolean") {
-        return Type.Boolean({ default: schema.default})
+        return Type.Boolean({
+            default: schema.default,
+            description: schema.description,
+            param: schema.param,
+            examples: schema.examples,
+        })
     } else if (schema.type === "null") {
         return Type.Null()
     } else {
-        return Type.Any()
+        return Type.Any({
+            default: schema.default,
+            description: schema.description,
+            param: schema.param,
+            examples: schema.examples,
+        })
     }
 }

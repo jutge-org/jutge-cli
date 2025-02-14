@@ -152,12 +152,18 @@ const addEndpointOptions = (endpointCmd: Command, endpoint: Endpoint) => {
 }
 
 const endpointCommand = (funcName: string, endpoint: Endpoint) => {
-    const cmd = new Command(endpoint.name).description(getDescription(endpoint.summary))
+    const cmd = new Command(endpoint.name).description(endpoint.summary || "<undocumented>")
 
     if (endpoint.input.param) {
-        addArgument(cmd, endpoint.input)
+        addArgument(cmd, {
+            param: endpoint.input.param,
+            description: endpoint.input.description,
+        })
     } else if (endpoint.input.type === "string") {
-        addArgument(cmd, { param: "string", description: "Input string" })
+        addArgument(cmd, {
+            param: "string",
+            description: endpoint.input.description,
+        })
     }
     if (endpoint.input.type === "object" && endpoint.input.properties) {
         addEndpointOptions(cmd, endpoint)
