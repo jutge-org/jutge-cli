@@ -1,9 +1,11 @@
-import { Endpoint, Module, zDirectory, zModule } from "./type"
+import { Value } from "@sinclair/typebox/value"
+import { ApiDir, Endpoint, Module } from "./types-typebox"
+import { jsonSchema2Typebox } from "./json-schema-to-typebox"
 
 export const loadDirectory = async () => {
     const response = await fetch("https://api.jutge.org/api/dir")
     const json = await response.json()
-    const { info, models, root } = zDirectory.parse(json)
+    const { info, models, root } = Value.Parse(ApiDir, json)
 
     const modelMap = new Map(models)
 
@@ -25,10 +27,12 @@ export const loadDirectory = async () => {
     }
 
     const resolveEndpoint = (endpoint: Endpoint) => {
+        const input = resolveType(endpoint.input)
+        const output = resolveType(endpoint.output)
         return {
             ...endpoint,
-            input: resolveType(endpoint.input),
-            output: resolveType(endpoint.output),
+            input: jsonSchema2Typebox(input),
+            output: jsonSchema2Typebox(output),
         }
     }
 
