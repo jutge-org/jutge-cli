@@ -1,12 +1,14 @@
 import { Value } from "@sinclair/typebox/value"
 import { ApiDir, Endpoint, Module } from "./types-typebox"
 import { jsonSchema2Typebox } from "./json-schema-to-typebox"
+import { writeFile } from "fs/promises"
 
 export const loadDirectory = async () => {
     const response = await fetch("https://api.jutge.org/api/dir")
     const json = await response.json()
+    
     if (process.env.NODE_ENV === "development") {
-        await Bun.write(`dir.json`, JSON.stringify(json, null, 2))
+        await writeFile(`dir.json`, JSON.stringify(json, null, 2))
     }
 
     const { info, models, root } = Value.Parse(ApiDir, json)
@@ -52,7 +54,7 @@ export const loadDirectory = async () => {
 
     const resolved = { info, root: resolveModule(root) }
     if (process.env.NODE_ENV === "development") {
-        await Bun.write(`dir-resolved.json`, JSON.stringify(resolved, null, 2))
+        await writeFile(`dir-resolved.json`, JSON.stringify(resolved, null, 2))
     }
 
     return resolved

@@ -24,7 +24,6 @@
     "dependencies": {
         "@commander-js/extra-typings": "^12.1.0",
         "@inquirer/prompts": "^4.3.3",
-        "@jutge.org/client-ts": "^0.0.4",
         "@sinclair/typebox": "^0.34.22",
         "@sinclair/typebox-codegen": "^0.10.5",
         "@types/ora": "^3.2.0",
@@ -45,7 +44,7 @@
         "zod": "^3.24.2"
     },
     "scripts": {
-        "build": "bun build ./src/index.ts --compile --outfile bin/jutge"
+        "build": "bun build ./src/index.ts --format esm --target node --banner '#!/usr/bin/env node' --outfile bin/jutge"
     },
     "publishConfig": {
         "access": "public"

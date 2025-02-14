@@ -5,6 +5,7 @@ import { Endpoint, Module } from "./directory/types-typebox"
 import { isTableData, printObject, printTable } from "./print"
 import { Static, Type } from "@sinclair/typebox"
 import { basename } from "path"
+import { readFile } from "fs/promises"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -17,7 +18,7 @@ const getDescription = (description: string | undefined | null) =>
     description ? description.split(`\n`)[0] : "<undocumented>"
 
 const writeFile = async (filename: string, content: any) => {
-    await Bun.write(filename, content)
+    await writeFile(filename, content)
     console.log(`Wrote '${filename}'`)
 }
 
@@ -59,7 +60,7 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
 
     if (ifiles === "one") {
         const filename = args[0]
-        const bytes = await Bun.file(filename).bytes()
+        const bytes = await readFile(filename)
         inputFiles.push(new File([bytes], basename(filename)))
     }
 
@@ -185,7 +186,7 @@ export const moduleCommand = (module: Module, rootName: string = "") => {
     const name = `${prefix}${module.name}`
 
     const cmd = new Command(module.name)
-    cmd.description(module.description || "<undocumented>")
+    cmd.description(getDescription(module.description))
 
     for (const submodule of module.submodules as Module[]) {
         cmd.addCommand(moduleCommand(submodule, name))
