@@ -1,11 +1,33 @@
 import { Command } from "@commander-js/extra-typings"
 import { Value } from "@sinclair/typebox/value"
-import { jutgeApiCall } from "./api-call"
+import { Download, jutgeApiCall } from "./api-call"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { isTableData, printObject, printTable } from "./print"
+import { Static, Type } from "@sinclair/typebox"
+
+export const TTestcase = Type.Object({
+    name: Type.String(),
+    input_b64: Type.String(),
+    correct_b64: Type.String(),
+})
+type Testcase = Static<typeof TTestcase>
 
 const getDescription = (description: string | undefined | null) =>
     description ? description.split(`\n`)[0] : "<undocumented>"
+
+const writeFile = async (filename: string, content: any) => {
+    await Bun.write(filename, content)
+    console.log(`Wrote '${filename}'`)
+}
+
+const writeTestcase = async (testcases: Testcase[]) => {
+    for (const testcase of testcases) {
+        const { name, input_b64, correct_b64 } = testcase
+        const base = name.replace(/.inp$/, "")
+        await writeFile(`${base}.inp`, Buffer.from(input_b64, "base64"))
+        await writeFile(`${base}.cor`, Buffer.from(correct_b64, "base64"))
+    }
+}
 
 const showArgsAndOptions =
     (funcName: string, endpoint: Endpoint) =>
@@ -39,7 +61,6 @@ const parseArgs = (args: any[], endpoint: Endpoint) => {
             if (input.required) {
                 required = new Set(input.required)
             }
-            const properties = Object.entries(input.properties) as [string, any][]
             for (const reqprop of required.keys()) {
                 if (rawOptions && !(reqprop in rawOptions)) {
                     throw new Error(`Missing required property: ${reqprop}`)
@@ -53,7 +74,7 @@ const parseArgs = (args: any[], endpoint: Endpoint) => {
             throw new Error("Not implemented")
         }
     } else if (input.type === "void") {
-        // NOTE(pauek): 'void' is part of JSON
+        // NOTE(pauek): Is 'void' part of JSON Schema?
         // In the API, the input is a single thing.
         // There can't be more than one parameter
         params = [undefined]
@@ -69,7 +90,7 @@ const callApi =
     async (...args) => {
         const { params, options } = parseArgs(args, endpoint)
 
-        let response: [any, any[]] = [null, []]
+        let response: [any, Download[]] = [null, []]
         if (options === null) {
             response = await jutgeApiCall(funcName, params[0])
         } else {
@@ -80,15 +101,20 @@ const callApi =
         // Show result
         if (isTableData(output)) {
             printTable(output)
-        } else if (typeof output === "object") {
+        } else if (typeof output === "object" && !Array.isArray(output)) {
             printObject(output)
-        } else {
+        } else if (Value.Check(Type.Array(TTestcase), output)) {
+            // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
+            await writeTestcase(output)
+        } else if (output) {
             console.log(output)
         }
 
         // FIXME: Save files instead of showing them
         if (ofiles.length > 0) {
-            console.log(ofiles)
+            for (const { name, content } of ofiles) {
+                await writeFile(name, content)
+            }
         }
     }
 
@@ -143,7 +169,7 @@ export const moduleCommand = (module: Module, rootName: string = "") => {
     const name = `${prefix}${module.name}`
 
     const cmd = new Command(module.name)
-    cmd.description(getDescription(module.description))
+    cmd.description(module.description || "<undocumented>")
 
     for (const submodule of module.submodules as Module[]) {
         cmd.addCommand(moduleCommand(submodule, name))

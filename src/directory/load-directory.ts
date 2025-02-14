@@ -5,6 +5,10 @@ import { jsonSchema2Typebox } from "./json-schema-to-typebox"
 export const loadDirectory = async () => {
     const response = await fetch("https://api.jutge.org/api/dir")
     const json = await response.json()
+    if (process.env.NODE_ENV === "development") {
+        await Bun.write(`dir.json`, JSON.stringify(json, null, 2))
+    }
+
     const { info, models, root } = Value.Parse(ApiDir, json)
 
     const modelMap = new Map(models)
@@ -21,6 +25,8 @@ export const loadDirectory = async () => {
         ) {
             const resolved = resolveType(type.patternProperties["^(.*)$"])
             return { ...type, patternProperties: { "^(.*)$": resolved } }
+        } else if (type.type === "array") {
+            return { ...type, items: resolveType(type.items) }
         } else {
             return type
         }
@@ -45,7 +51,9 @@ export const loadDirectory = async () => {
     }
 
     const resolved = { info, root: resolveModule(root) }
-    await Bun.write(`dir.json`, JSON.stringify(resolved, null, 2))
+    if (process.env.NODE_ENV === "development") {
+        await Bun.write(`dir-resolved.json`, JSON.stringify(resolved, null, 2))
+    }
 
     return resolved
 }

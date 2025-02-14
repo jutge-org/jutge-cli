@@ -79,12 +79,28 @@ export const printObject = (data: Record<string, any>) => {
         // Create the table and fill it
         const table = new Table({ wordWrap: true, colWidths })
         for (const [key, value] of [first, ...rest]) {
-            table.push([key, value])
+            table.push([key, JSON.stringify(value)])
         }
 
         // Print it
         console.log(table.toString())
     }
+}
+
+const sameElements = <T>(a: Set<T>, b: Set<T>) => {
+    if (a.size !== b.size) {
+        return false
+    }
+    for (const elem of a) {
+        if (!b.has(elem)) {
+            return false
+        }
+    }
+    return true
+}
+
+const arrayEqual = (a: any[], b: any[]) => {
+    return a.length === b.length && sameElements(new Set(a), new Set(b))
 }
 
 export const isTableData = (data: any) => {
@@ -94,7 +110,14 @@ export const isTableData = (data: any) => {
     if (Array.isArray(data)) {
         return false
     }
+    let columns: string[] = []
     for (const key in data) {
+        const cols = Object.keys(data[key])
+        if (columns.length === 0) {
+            columns = cols
+        } else if (!arrayEqual(columns, cols)) {
+            return false
+        }
         if (typeof data[key] !== "object") {
             return false
         }

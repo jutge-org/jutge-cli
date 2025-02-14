@@ -3,4 +3,5 @@ node_modules/
 bin/
 src/client/
 dir.json
-dir-orig.json
+dir-resolved.json
+.env
