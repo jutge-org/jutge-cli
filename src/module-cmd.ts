@@ -4,6 +4,7 @@ import { Download, jutgeApiCall } from "./api-call"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { isTableData, printObject, printTable } from "./print"
 import { Static, Type } from "@sinclair/typebox"
+import { basename } from "path"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -40,7 +41,7 @@ const showArgsAndOptions =
         console.log("Command: ", _command.name())
     }
 
-const parseArgs = (args: any[], endpoint: Endpoint) => {
+const parseArgs = async (args: any[], endpoint: Endpoint) => {
     // args = [params..., options, command]
     args.pop() // Discard command
 
@@ -50,9 +51,18 @@ const parseArgs = (args: any[], endpoint: Endpoint) => {
         rawOptions = null
     }
 
+    let inputFiles: File[] = []
     let params: any[] = []
     let options: Record<string, any> | null = null
-    const { input } = endpoint
+
+    const { input, ifiles } = endpoint
+
+    if (ifiles === "one") {
+        const filename = args[0]
+        const bytes = await Bun.file(filename).bytes()
+        inputFiles.push(new File([bytes], basename(filename)))
+    }
+
     if (input.type === "object") {
         // The properties are the options in the command
         if (input.properties) {
@@ -82,19 +92,19 @@ const parseArgs = (args: any[], endpoint: Endpoint) => {
         params = [Value.Parse(input, args[0])]
     }
 
-    return { params, options }
+    return { params, options, ifiles: inputFiles }
 }
 
 const callApi =
     (funcName: string, endpoint: Endpoint) =>
     async (...args) => {
-        const { params, options } = parseArgs(args, endpoint)
+        const { params, options, ifiles } = await parseArgs(args, endpoint)
 
         let response: [any, Download[]] = [null, []]
         if (options === null) {
-            response = await jutgeApiCall(funcName, params[0])
+            response = await jutgeApiCall(funcName, params[0], ifiles)
         } else {
-            response = await jutgeApiCall(funcName, options, args)
+            response = await jutgeApiCall(funcName, options, ifiles)
         }
         const [output, ofiles] = response
 
