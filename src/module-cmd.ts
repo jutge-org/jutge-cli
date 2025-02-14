@@ -1,11 +1,12 @@
 import { Command } from "@commander-js/extra-typings"
-import { Value } from "@sinclair/typebox/value"
-import { Download, jutgeApiCall } from "./api-call"
-import { Endpoint, Module } from "./directory/types-typebox"
-import { isTableData, printObject, printTable } from "./print"
 import { Static, Type } from "@sinclair/typebox"
+import { Value } from "@sinclair/typebox/value"
+import { readFile, writeFile } from "fs/promises"
 import { basename } from "path"
-import { readFile } from "fs/promises"
+import { removeCredentials, saveCredentials } from "./credentials"
+import { Endpoint, Module } from "./directory/types-typebox"
+import { Download, jutgeApiCall } from "./jutge-api-call"
+import { isTableData, printObject, printTable } from "./print"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -17,7 +18,7 @@ type Testcase = Static<typeof TTestcase>
 const getDescription = (description: string | undefined | null) =>
     description ? description.split(`\n`)[0] : "<undocumented>"
 
-const writeFile = async (filename: string, content: any) => {
+const writeOutputFile = async (filename: string, content: any) => {
     await writeFile(filename, content)
     console.log(`Wrote '${filename}'`)
 }
@@ -26,8 +27,8 @@ const writeTestcase = async (testcases: Testcase[]) => {
     for (const testcase of testcases) {
         const { name, input_b64, correct_b64 } = testcase
         const base = name.replace(/.inp$/, "")
-        await writeFile(`${base}.inp`, Buffer.from(input_b64, "base64"))
-        await writeFile(`${base}.cor`, Buffer.from(correct_b64, "base64"))
+        await writeOutputFile(`${base}.inp`, Buffer.from(input_b64, "base64"))
+        await writeOutputFile(`${base}.cor`, Buffer.from(correct_b64, "base64"))
     }
 }
 
@@ -96,6 +97,28 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
     return { params, options, ifiles: inputFiles }
 }
 
+const showResult = async (output: any) => {
+    // Show result
+    if (isTableData(output)) {
+        printTable(output)
+    } else if (typeof output === "object" && !Array.isArray(output)) {
+        printObject(output)
+    } else if (Value.Check(Type.Array(TTestcase), output)) {
+        // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
+        await writeTestcase(output)
+    } else if (output) {
+        console.log(output)
+    }
+}
+
+const writeOutputFiles = async (ofiles: Download[]) => {
+    if (ofiles.length > 0) {
+        for (const { name, content } of ofiles) {
+            await writeOutputFile(name, content)
+        }
+    }
+}
+
 const callApi =
     (funcName: string, endpoint: Endpoint) =>
     async (...args) => {
@@ -107,25 +130,17 @@ const callApi =
         } else {
             response = await jutgeApiCall(funcName, options, ifiles)
         }
+
         const [output, ofiles] = response
-
-        // Show result
-        if (isTableData(output)) {
-            printTable(output)
-        } else if (typeof output === "object" && !Array.isArray(output)) {
-            printObject(output)
-        } else if (Value.Check(Type.Array(TTestcase), output)) {
-            // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
-            await writeTestcase(output)
-        } else if (output) {
-            console.log(output)
-        }
-
-        // FIXME: Save files instead of showing them
-        if (ofiles.length > 0) {
-            for (const { name, content } of ofiles) {
-                await writeFile(name, content)
-            }
+        if (funcName === "auth.login") {
+            // Intercept "auth.login" to save credentials
+            await saveCredentials(output)
+        } else if (funcName === "auth.logout") {
+            // Intercept "auth.logout" to remove credentials
+            await removeCredentials()
+        } else {
+            await showResult(output)
+            await writeOutputFiles(ofiles)
         }
     }
 

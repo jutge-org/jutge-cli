@@ -6,14 +6,7 @@ export interface Download {
     readonly type: string
 }
 
-export interface Meta {
-    readonly token: string
-    readonly exam: string | null
-}
-
 const JUTGE_API_URL = process.env.JUTGE_API_URL || "https://api.jutge.org/api"
-
-let meta: Meta | null = null
 
 export const jutgeApiCall = async (
     func: string,
@@ -22,7 +15,7 @@ export const jutgeApiCall = async (
 ): Promise<[any, Download[]]> => {
     // prepare form
     const iform = new FormData()
-    const idata = { func, input, meta }
+    const idata = { func, input, meta: jutgeApiCall.meta }
 
     iform.append("data", JSON.stringify(idata))
     for (const index in ifiles) {
@@ -60,3 +53,6 @@ export const jutgeApiCall = async (
 
     return [output, ofiles]
 }
+
+export type Meta = undefined | { token: string } | undefined
+jutgeApiCall.meta = undefined as Meta
