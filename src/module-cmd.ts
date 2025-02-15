@@ -6,7 +6,7 @@ import { basename } from "path"
 import { removeCredentials, saveCredentials } from "./credentials"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { Download, jutgeApiCall } from "./jutge-api-call"
-import { isTableData, printObject, printTable } from "./print"
+import { isTableData, printObject, printTable } from "./output"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
