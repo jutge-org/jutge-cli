@@ -54,5 +54,5 @@ export const jutgeApiCall = async (
     return [output, ofiles]
 }
 
-export type Meta = undefined | { token: string } | undefined
+export type Meta = { token: string } | undefined
 jutgeApiCall.meta = undefined as Meta
