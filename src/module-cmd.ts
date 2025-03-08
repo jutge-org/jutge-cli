@@ -3,7 +3,6 @@ import { Static, Type } from "@sinclair/typebox"
 import { Value } from "@sinclair/typebox/value"
 import { readFile, writeFile } from "fs/promises"
 import { basename } from "path"
-import { removeCredentials, saveCredentials } from "./credentials"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { Download, jutgeApiCall } from "./jutge-api-call"
 import { isTableData, printObject, printTable } from "./output"
@@ -132,16 +131,8 @@ const callApi =
         }
 
         const [output, ofiles] = response
-        if (funcName === "auth.login") {
-            // Intercept "auth.login" to save credentials
-            await saveCredentials(output)
-        } else if (funcName === "auth.logout") {
-            // Intercept "auth.logout" to remove credentials
-            await removeCredentials()
-        } else {
-            await showResult(output)
-            await writeOutputFiles(ofiles)
-        }
+        await showResult(output)
+        await writeOutputFiles(ofiles)
     }
 
 const addArgument = (cmd: Command, input: any) => {
