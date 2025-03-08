@@ -1,12 +1,11 @@
 import { Command } from "@commander-js/extra-typings"
-import { authCmd } from "./auth"
-import { readCredentials } from "./credentials"
+import { authCmd } from "./auth/auth"
 import { loadDirectory } from "./directory/load-directory"
 import { moduleCommand } from "./module-cmd"
 import { versionCmd } from "./version"
 
 const directory = await loadDirectory()
-await readCredentials()
+// FIXME: await readCredentials()
 
 const jutgeCli = new Command().name("jutge").description("Jutge.org CLI")
 
