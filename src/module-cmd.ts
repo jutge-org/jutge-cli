@@ -6,6 +6,8 @@ import { basename } from "path"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { Download, jutgeApiCall } from "./jutge-api-call"
 import { isTableData, printObject, printTable } from "./output"
+import { applyCredentials } from "./auth/credentials-file"
+import { UnauthorizedError } from "./errors"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -93,6 +95,14 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
         params = [Value.Parse(input, args[0])]
     }
 
+    // -a, --account option for authenticated endpoints
+    if (endpoint.actor !== undefined) {
+        const account = rawOptions?.account
+        if (account !== undefined) {
+            options = { ...options, account }
+        }
+    }
+
     return { params, options, ifiles: inputFiles }
 }
 
@@ -121,18 +131,39 @@ const writeOutputFiles = async (ofiles: Download[]) => {
 const callApi =
     (funcName: string, endpoint: Endpoint) =>
     async (...args) => {
-        const { params, options, ifiles } = await parseArgs(args, endpoint)
+        let { params, options, ifiles } = await parseArgs(args, endpoint)
 
-        let response: [any, Download[]] = [null, []]
-        if (options === null) {
-            response = await jutgeApiCall(funcName, params[0], ifiles)
-        } else {
-            response = await jutgeApiCall(funcName, options, ifiles)
+        if (endpoint.actor !== undefined) {
+            if (options && options.account) {
+                // Use the supplied credentials for this command
+                await applyCredentials(options.account)
+                delete options.account
+                if (Object.keys(options).length === 0) {
+                    options = null;
+                }
+            } else {
+                await applyCredentials()
+            }
         }
 
-        const [output, ofiles] = response
-        await showResult(output)
-        await writeOutputFiles(ofiles)
+        try {
+            let response: [any, Download[]] = [null, []]
+            if (options === null) {
+                response = await jutgeApiCall(funcName, params[0], ifiles)
+            } else {
+                response = await jutgeApiCall(funcName, options, ifiles)
+            }
+
+            const [output, ofiles] = response
+            await showResult(output)
+            await writeOutputFiles(ofiles)
+        } catch (e) {
+            if (e instanceof UnauthorizedError) {
+                console.error("Unauthorized")
+            } else {
+                console.error("error:", e.message)
+            }
+        }
     }
 
 const addArgument = (cmd: Command, input: any) => {
@@ -174,6 +205,9 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     }
     if (endpoint.input.type === "object" && endpoint.input.properties) {
         addEndpointOptions(cmd, endpoint)
+    }
+    if (endpoint.actor !== undefined) {
+        cmd.option("-a, --account <name>", "Account to use (instead of the active one)")
     }
     if (endpoint.ifiles === "one") {
         addInputFile(cmd)

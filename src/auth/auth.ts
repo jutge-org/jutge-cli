@@ -1,5 +1,7 @@
 import { Command } from "@commander-js/extra-typings"
-import { authAccountCmd } from "./auth-profile"
+import { authAccountCmd } from "./auth-account"
+import { _getActiveAccount, getActiveAccountName, login, logout } from "./credentials-file"
+import { password as inputPassword, input } from "@inquirer/prompts"
 
 /*
 
@@ -40,23 +42,27 @@ using the default one.
 
 */
 
+export const authCmd = new Command("auth").description("Manage Jutge.org credentials")
 
-
-export const authCmd = new Command("auth")
-    .description("Manage Jutge.org credentials")
-
-const authLoginCmd = new Command("login")
+authCmd
+    .command("login")
     .description("Login to Jutge.org")
-    .action(() => {
-        console.log("Login")
+    .option("-e, --email <email>", "Email")
+    .option("-p, --password <password>", "Password")
+    .option("-a, --account <name>", "Account to use (instead of the active one)")
+    .action(async ({ account, email, password }) => {
+        const _account = account || (await getActiveAccountName())
+        console.log(`Logging in for account '${_account}'`)
+        console.log(await login(_account, email, password))
     })
 
-const authLogoutCmd = new Command("logout")
+authCmd
+    .command("logout")
     .description("Logout from Jutge.org")
-    .action(() => {
-        console.log("Logout")
+    .option("-a, --account <name>", "Account to use (instead of the active one)")
+    .action(async ({ account }) => {
+        const _account = account || (await getActiveAccountName())
+        console.log(await logout(_account))
     })
 
-authCmd.addCommand(authLoginCmd)
-authCmd.addCommand(authLogoutCmd)
 authCmd.addCommand(authAccountCmd)

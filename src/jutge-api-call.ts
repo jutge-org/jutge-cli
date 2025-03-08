@@ -16,7 +16,7 @@ export const jutgeApiCall = async (
     // prepare form
     const iform = new FormData()
     const idata = { func, input, meta: jutgeApiCall.meta }
-
+    
     iform.append("data", JSON.stringify(idata))
     for (const index in ifiles) {
         iform.append(`file_${index}`, ifiles[index])

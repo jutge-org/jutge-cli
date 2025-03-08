@@ -23,7 +23,7 @@
     },
     "dependencies": {
         "@commander-js/extra-typings": "^12.1.0",
-        "@inquirer/prompts": "^4.3.3",
+        "@inquirer/prompts": "^7.3.3",
         "@sinclair/typebox": "^0.34.22",
         "@sinclair/typebox-codegen": "^0.10.5",
         "@types/ora": "^3.2.0",
