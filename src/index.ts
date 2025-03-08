@@ -1,20 +1,21 @@
 import { Command } from "@commander-js/extra-typings"
-import { version } from "../package.json"
+import { authCmd } from "./auth"
+import { readCredentials } from "./credentials"
 import { loadDirectory } from "./directory/load-directory"
 import { moduleCommand } from "./module-cmd"
 import { versionCmd } from "./version"
-import { readCredentials } from "./credentials"
 
 const directory = await loadDirectory()
 await readCredentials()
 
-const jutgeCli = new Command()
-    .name("jutge")
-    .description("Jutge.org CLI")
-    .version(version, "--version", "Show the Jutge.org/cli version")
+const jutgeCli = new Command().name("jutge").description("Jutge.org CLI")
 
-jutgeCli.addCommand(versionCmd)
+jutgeCli.addCommand(authCmd)
 for (const module of directory.root.submodules) {
-    jutgeCli.addCommand(moduleCommand(module, ""))
+    // NOTE(pauek): We override 'auth' with a more useful alternative
+    if (module.name !== "auth") {
+        jutgeCli.addCommand(moduleCommand(module, ""))
+    }
 }
+jutgeCli.addCommand(versionCmd)
 jutgeCli.parse()

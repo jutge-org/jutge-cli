@@ -5,19 +5,18 @@ import { readFile, rm, writeFile } from "fs/promises"
 import { jutgeApiCall } from "./jutge-api-call"
 import { mkdir } from "fs/promises"
 
-export const TCredentialsOut = Type.Object({
+export const TCredentials = Type.Object({
     token: Type.String(),
     expiration: Type.Date(),
     user_uid: Type.String(),
-    error: Type.String(),
 })
-type CredentialsOut = Static<typeof TCredentialsOut>
+type Credentials = Static<typeof TCredentials>
 
 const stateDir = `${process.env.HOME}/.local/state/jutge.org`
 const credentialsFile = `${stateDir}/credentials.json`
 
-export const saveCredentials = async (output: any) => {
-    const credentials = Value.Parse(TCredentialsOut, output)
+export const saveCredentials = async (data: any) => {
+    const credentials = Value.Parse(TCredentials, data)
     await mkdir(stateDir, { recursive: true })
     await writeFile(credentialsFile, JSON.stringify(credentials))
     console.log("Logged in")
@@ -33,7 +32,9 @@ export const removeCredentials = async () => {
 export const readCredentials = async () => {
     if (existsSync(credentialsFile)) {
         const bytes = await readFile(credentialsFile)
-        const credentials = JSON.parse(bytes.toString()) as CredentialsOut
-        jutgeApiCall.meta = { token: credentials.token }
+        const credentials = JSON.parse(bytes.toString()) as Credentials
+        jutgeApiCall.meta = {
+            token: credentials.token,
+        }
     }
 }
