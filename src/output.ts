@@ -35,12 +35,23 @@ export const verticalTable = (data: any) => {
     console.log(table.toString())
 }
 
-export const json = (data: any) => {
+export const printJson = (data: any) => {
     console.log(JSON.stringify(data, null, 2))
 }
 
-export const yaml = (data: any) => {
+export const printYaml = (data: any) => {
     console.log(yml.stringify(data))
+}
+
+export const printCsv = (data: any) => {
+    const printValue = (value: any) => {
+        return typeof value === "string" ? `"${value}"` : value
+    }
+    if (typeof data === "object" && !Array.isArray(data)) {
+        const keys = Object.keys(data)
+        console.log(keys.join(";"))
+        console.log(keys.map((k) => printValue(data[k])).join(";"))
+    }
 }
 
 const MAX_COL_WIDTH = 80
