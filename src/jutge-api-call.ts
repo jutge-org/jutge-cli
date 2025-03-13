@@ -12,14 +12,19 @@ export const jutgeApiCall = async (
     func: string,
     input: any,
     ifiles: File[] = [],
+    debug: boolean = false,
 ): Promise<[any, Download[]]> => {
     // prepare form
     const iform = new FormData()
     const idata = { func, input, meta: jutgeApiCall.meta }
-    
+
     iform.append("data", JSON.stringify(idata))
     for (const index in ifiles) {
         iform.append(`file_${index}`, ifiles[index])
+    }
+
+    if (debug) {
+        console.log("input", idata)
     }
 
     // send request
@@ -33,8 +38,11 @@ export const jutgeApiCall = async (
 
     const oform = await response.formData()
     const odata = oform.get("data")
-    const { output, error, duration, operation_id, time } = JSON.parse(odata as string)
+    if (debug) {
+        console.log("output", odata)
+    }
 
+    const { output, error, duration, operation_id, time } = JSON.parse(odata as string)
     if (error) {
         throwError(error, operation_id)
     }
