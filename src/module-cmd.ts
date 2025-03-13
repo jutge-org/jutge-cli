@@ -61,7 +61,8 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
     const { input, ifiles } = endpoint
 
     if (ifiles === "one") {
-        const filename = args[0]
+        // The last argument is the file
+        const filename = args[args.length - 1]
         const bytes = await readFile(filename)
         inputFiles.push(new File([bytes], basename(filename)))
     }
@@ -212,6 +213,7 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     if (endpoint.ifiles === "one") {
         addInputFile(cmd)
     }
+    // TODO(pauek): More files??
 
     // cmd.action(showArgsAndOptions(funcName))
     cmd.action((...args) => {
