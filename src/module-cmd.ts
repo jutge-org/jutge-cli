@@ -8,7 +8,13 @@ import { applyCredentials } from "./auth/credentials-file"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { UnauthorizedError } from "./errors"
 import { Download, jutgeApiCall } from "./jutge-api-call"
-import { isTableData, printObject, printTable } from "./output"
+import {
+    isTableData,
+    printCsv,
+    printJson,
+    printObject as printObjectTable,
+    printYaml,
+} from "./output"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -16,6 +22,8 @@ export const TTestcase = Type.Object({
     correct_b64: Type.String(),
 })
 type Testcase = Static<typeof TTestcase>
+
+type OutputFormat = "json" | "table" | "yaml" | "csv" | "raw" | null
 
 const getDescription = (description: string | undefined | null) =>
     description ? description.split(`\n`)[0] : "<undocumented>"
@@ -81,10 +89,38 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
         options = { output: rawOptions?.output }
     }
 
+    // Output, Account and Format options
+    for (const key of Object.keys(rawOptions || {})) {
+        switch (key) {
+            // All these options do not appear in the API directory, we added
+            // them a posteriori, so they don't have an associated schema
+            case "json":
+            case "table":
+            case "yaml":
+            case "csv":
+            case "raw":
+            case "debug":
+                if (options === null) {
+                    options = {}
+                }
+                options[key] = Value.Parse(Type.Boolean(), rawOptions![key])
+                break
+            case "account":
+            case "output": {
+                if (options === null) {
+                    options = {}
+                }
+                options[key] = Value.Parse(Type.String(), rawOptions![key])
+                break
+            }
+        }
+        // Remove these options for the next loop
+        delete rawOptions![key]
+    }
+
     if (input.type === "object") {
         // The properties are the options in the command
         if (input.properties) {
-            options = {}
             let required = new Set<string>()
             if (input.required) {
                 required = new Set(input.required)
@@ -95,19 +131,11 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
                 }
             }
             for (const key of Object.keys(rawOptions || {})) {
-                switch (key) {
-                    // "account", "output" do not appear in the API directory, we added
-                    // them a posteriori, so they don't have an associated schema
-                    case "account":
-                    case "output": {
-                        options[key] = Value.Parse(Type.String(), rawOptions![key])
-                        break
-                    }
-                    default: {
-                        const tschema = input.properties[key]
-                        options[key] = Value.Parse(tschema, rawOptions![key])
-                    }
+                const tschema = input.properties[key]
+                if (options === null) {
+                    options = {}
                 }
+                options[key] = Value.Parse(tschema, rawOptions![key])
             }
         } else if (input.patternProperties) {
             throw new Error("Not implemented")
@@ -132,16 +160,28 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
     return { params, options, ifiles: inputFiles }
 }
 
-const showResult = async (output: any) => {
-    // Show result
-    if (isTableData(output)) {
-        printTable(output)
-    } else if (typeof output === "object" && !Array.isArray(output)) {
-        printObject(output)
-    } else if (Value.Check(Type.Array(TTestcase), output)) {
+const showResult = async (output: any, format: OutputFormat) => {
+    if (Value.Check(Type.Array(TTestcase), output)) {
         // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
         await writeTestcase(output)
-    } else if (output) {
+    } else if (format === "raw") {
+        console.log(output)
+    } else if (format === "json") {
+        printJson(output)
+    } else if (format === "yaml") {
+        printYaml(output)
+    } else if (format === "csv") {
+        printCsv(output)
+    } else if (format === "table" || (format === null && isTableData(output))) {
+        if (typeof output === "object") {
+            printObjectTable(output)
+        } else if (isTableData(output)) {
+            console.log(`warning: data does not seem to fit into a table`)
+            console.log(output)
+        }
+    } else if (typeof output === "object" && !Array.isArray(output)) {
+        printObjectTable(output)
+    } else {
         console.log(output)
     }
 }
@@ -158,48 +198,71 @@ const writeOutputFiles = async (ofiles: Download[], outputFile: string | null) =
     }
 }
 
+const processSpecialOptions = async (
+    endpoint: Endpoint,
+    parsedOptions: Record<string, any> | null,
+) => {
+    let options: Record<string, any> | null = parsedOptions === null ? null : { ...parsedOptions }
+    let outputFile: string | null = null
+    let format: OutputFormat = null
+    let debug: boolean = false
+
+    const deleteOption = (key: string) => {
+        if (options && options[key]) {
+            delete options[key]
+            if (Object.keys(options).length === 0) {
+                options = null
+            }
+        }
+    }
+
+    // Treat -a, --account specially
+    if (endpoint.actor !== undefined) {
+        if (options && options.account) {
+            // Use the supplied credentials for this command
+            await applyCredentials(options.account)
+            deleteOption("account")
+        } else {
+            await applyCredentials()
+        }
+    }
+
+    // Also treat -o, --output specially
+    if (endpoint.ofiles === "one" && options && options.output) {
+        outputFile = options.output
+        deleteOption("output")
+    }
+
+    // Boolean options
+    for (const fmt of ["json", "table", "yaml", "csv", "raw"]) {
+        if (options && options[fmt]) {
+            format = fmt as OutputFormat
+            deleteOption(fmt)
+        }
+    }
+    if (options && options.debug) {
+        debug = true
+        deleteOption("debug")
+    }
+
+    return { options, outputFile, format, debug }
+}
+
 const callApi =
     (funcName: string, endpoint: Endpoint) =>
     async (...args) => {
-        let { params, options, ifiles } = await parseArgs(args, endpoint)
-        let outputFile: string | null = null
-
-        const deleteOption = (key: string) => {
-            if (options && options[key]) {
-                delete options[key]
-                if (Object.keys(options).length === 0) {
-                    options = null
-                }
-            }
-        }
-
-        // Treat -a, --account specially
-        if (endpoint.actor !== undefined) {
-            if (options && options.account) {
-                // Use the supplied credentials for this command
-                await applyCredentials(options.account)
-                deleteOption("account")
-            } else {
-                await applyCredentials()
-            }
-        }
-
-        // Also treat -o, --output specially
-        if (endpoint.ofiles === "one" && options && options.output) {
-            outputFile = options.output
-            deleteOption("output")
-        }
+        const parsed = await parseArgs(args, endpoint)
+        const { options, outputFile, format, debug } = await processSpecialOptions(
+            endpoint,
+            parsed.options,
+        )
 
         try {
-            let response: [any, Download[]] = [null, []]
-            if (options === null) {
-                response = await jutgeApiCall(funcName, params[0], ifiles)
-            } else {
-                response = await jutgeApiCall(funcName, options, ifiles)
-            }
+            let input: any = options === null ? parsed.params[0] : options
 
-            const [output, ofiles] = response
-            await showResult(output)
+            const [output, ofiles] = await jutgeApiCall(funcName, input, parsed.ifiles, debug)
+
+            await showResult(output, format)
             await writeOutputFiles(ofiles, outputFile)
         } catch (e) {
             if (e instanceof UnauthorizedError) {
@@ -260,6 +323,16 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
         cmd.option("-o, --output <filename>", "Override output filename")
     }
     // TODO(pauek): More files??
+
+    if (endpoint.output) {
+        cmd.option("--table", "Output in table format")
+        cmd.option("--json", "Output in JSON format")
+        cmd.option("--yaml", "Output in YAML format")
+        cmd.option("--csv", "Output in CSV format")
+        cmd.option("--raw", "Output without formatting")
+    }
+
+    cmd.option("--debug", "Show debug information")
 
     // cmd.action(showArgsAndOptions(funcName))
     cmd.action((...args) => {
