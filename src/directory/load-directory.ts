@@ -7,10 +7,6 @@ export const loadDirectory = async () => {
     const response = await fetch("https://api.jutge.org/api/dir")
     const json = await response.json()
     
-    if (process.env.NODE_ENV === "development") {
-        await writeFile(`dir.json`, JSON.stringify(json, null, 2))
-    }
-
     const { info, models, root } = Value.Parse(ApiDir, json)
 
     const modelMap = new Map(models)
@@ -53,9 +49,5 @@ export const loadDirectory = async () => {
     }
 
     const resolved = { info, root: resolveModule(root) }
-    if (process.env.NODE_ENV === "development") {
-        await writeFile(`dir-resolved.json`, JSON.stringify(resolved, null, 2))
-    }
-
     return resolved
 }
