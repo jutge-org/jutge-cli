@@ -1,13 +1,14 @@
 import { Command } from "@commander-js/extra-typings"
 import { Static, Type } from "@sinclair/typebox"
 import { Value } from "@sinclair/typebox/value"
+import { existsSync } from "fs"
 import { readFile, writeFile } from "fs/promises"
-import { basename } from "path"
+import { basename, extname } from "path"
+import { applyCredentials } from "./auth/credentials-file"
 import { Endpoint, Module } from "./directory/types-typebox"
+import { UnauthorizedError } from "./errors"
 import { Download, jutgeApiCall } from "./jutge-api-call"
 import { isTableData, printObject, printTable } from "./output"
-import { applyCredentials } from "./auth/credentials-file"
-import { UnauthorizedError } from "./errors"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -20,6 +21,15 @@ const getDescription = (description: string | undefined | null) =>
     description ? description.split(`\n`)[0] : "<undocumented>"
 
 const writeOutputFile = async (filename: string, content: any) => {
+    if (existsSync(filename)) {
+        const ext = extname(filename)
+        const base = filename.slice(0, -ext.length)
+        let i = 1
+        while (existsSync(`${base} (${i})${ext}`)) {
+            i++
+        }
+        filename = `${base} (${i})${ext}`
+    }
     await writeFile(filename, content)
     console.log(`Wrote '${filename}'`)
 }
@@ -58,13 +68,17 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
     let params: any[] = []
     let options: Record<string, any> | null = null
 
-    const { input, ifiles } = endpoint
+    const { input, ifiles, ofiles } = endpoint
 
     if (ifiles === "one") {
         // The last argument is the file
         const filename = args[args.length - 1]
         const bytes = await readFile(filename)
         inputFiles.push(new File([bytes], basename(filename)))
+    }
+
+    if (ofiles === "one" && rawOptions?.output) {
+        options = { output: rawOptions?.output }
     }
 
     if (input.type === "object") {
@@ -81,8 +95,19 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
                 }
             }
             for (const key of Object.keys(rawOptions || {})) {
-                const tschema = input.properties[key]
-                options[key] = Value.Parse(tschema, rawOptions![key])
+                switch (key) {
+                    // "account", "output" do not appear in the API directory, we added
+                    // them a posteriori, so they don't have an associated schema
+                    case "account":
+                    case "output": {
+                        options[key] = Value.Parse(Type.String(), rawOptions![key])
+                        break
+                    }
+                    default: {
+                        const tschema = input.properties[key]
+                        options[key] = Value.Parse(tschema, rawOptions![key])
+                    }
+                }
             }
         } else if (input.patternProperties) {
             throw new Error("Not implemented")
@@ -121,8 +146,12 @@ const showResult = async (output: any) => {
     }
 }
 
-const writeOutputFiles = async (ofiles: Download[]) => {
-    if (ofiles.length > 0) {
+const writeOutputFiles = async (ofiles: Download[], outputFile: string | null) => {
+    if (ofiles.length === 1) {
+        const { name, content } = ofiles[0]
+        const filename = outputFile || name
+        await writeOutputFile(filename, content)
+    } else if (ofiles.length > 1) {
         for (const { name, content } of ofiles) {
             await writeOutputFile(name, content)
         }
@@ -133,18 +162,32 @@ const callApi =
     (funcName: string, endpoint: Endpoint) =>
     async (...args) => {
         let { params, options, ifiles } = await parseArgs(args, endpoint)
+        let outputFile: string | null = null
 
+        const deleteOption = (key: string) => {
+            if (options && options[key]) {
+                delete options[key]
+                if (Object.keys(options).length === 0) {
+                    options = null
+                }
+            }
+        }
+
+        // Treat -a, --account specially
         if (endpoint.actor !== undefined) {
             if (options && options.account) {
                 // Use the supplied credentials for this command
                 await applyCredentials(options.account)
-                delete options.account
-                if (Object.keys(options).length === 0) {
-                    options = null;
-                }
+                deleteOption("account")
             } else {
                 await applyCredentials()
             }
+        }
+
+        // Also treat -o, --output specially
+        if (endpoint.ofiles === "one" && options && options.output) {
+            outputFile = options.output
+            deleteOption("output")
         }
 
         try {
@@ -157,7 +200,7 @@ const callApi =
 
             const [output, ofiles] = response
             await showResult(output)
-            await writeOutputFiles(ofiles)
+            await writeOutputFiles(ofiles, outputFile)
         } catch (e) {
             if (e instanceof UnauthorizedError) {
                 console.error("Unauthorized")
@@ -213,11 +256,14 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     if (endpoint.ifiles === "one") {
         addInputFile(cmd)
     }
+    if (endpoint.ofiles === "one") {
+        cmd.option("-o, --output <filename>", "Override output filename")
+    }
     // TODO(pauek): More files??
 
     // cmd.action(showArgsAndOptions(funcName))
     cmd.action((...args) => {
-        // showArgsAndOptions(funcName)(...args)
+        // showArgsAndOptions(funcName, endpoint)(...args)
         callApi(funcName, endpoint)(...args)
     })
     return cmd
