@@ -1,6 +1,12 @@
 {
     "name": "@jutge.org/cli",
     "version": "0.1.4",
+    "description": "Jutge.org CLI",
+    "keywords": [
+        "jutge.org",
+        "cli",
+        "command line interface"
+    ],
     "module": "index.ts",
     "type": "module",
     "bin": {
