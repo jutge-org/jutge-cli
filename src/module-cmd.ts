@@ -19,7 +19,7 @@ import {
     printYaml,
 } from "./output"
 import { printStdout } from "./print"
-import { isArray } from "util"
+import { File } from "buffer"
 
 export const TTestcase = Type.Object({
     name: Type.String(),

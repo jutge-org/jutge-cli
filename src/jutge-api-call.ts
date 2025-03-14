@@ -1,5 +1,6 @@
 import { ProtocolError, throwError } from "./errors"
 import { printStdout } from "./print"
+import { File } from "buffer"
 
 export interface Download {
     readonly content: Uint8Array
