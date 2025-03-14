@@ -2,9 +2,7 @@
 
 This is a command line interface for the Jutge platform. 
 
-WARNING: This is pre-alpha software, expect a rough experience.
-
-Eventually, it will allow you to download problems, submit solutions, and check your progress, and in general perform operations in the Jutge.org platform.
+WARNING: This is beta software, don't expect an optimal experience!
 
 ## Installation
 
@@ -20,7 +18,7 @@ You don't even need to have installed permanently:
 
 ```bash
 bunx @jutge.org/cli misc fortune
-```g
+```
 
 ## Installing from source
 
@@ -31,5 +29,3 @@ bun run build
 ```
 
 Then get the binary file from the `bin` folder.
-
-
