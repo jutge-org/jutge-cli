@@ -11,6 +11,9 @@
         "type": "git",
         "url": "https://github.com/jutge-org/cli.git"
     },
+    "publishConfig": {
+        "access": "public"
+    },
     "homepage": "https://api.jutge.org/cli",
     "type": "module",
     "module": "index.ts",
@@ -31,7 +34,6 @@
     "dependencies": {
         "@commander-js/extra-typings": "^12.1.0",
         "@inquirer/prompts": "^7.3.3",
-        "@jutge.org/api-clients": "^0.1.0",
         "@sinclair/typebox": "^0.34.30",
         "@sinclair/typebox-codegen": "^0.10.5",
         "chalk": "^5.4.1",
@@ -42,9 +44,6 @@
     },
     "scripts": {
         "build": "bun build ./src/index.ts --format esm --target node --banner '#!/usr/bin/env node' --outfile bin/jutge"
-    },
-    "publishConfig": {
-        "access": "public"
     },
     "prettier": {
         "trailingComma": "all",

@@ -1,3 +1,3 @@
-import { createCli } from './cli'
+import { createCli } from "./cli"
 
-createCli().then(cli => cli.parse())
+createCli().then((cli) => cli.parse())
