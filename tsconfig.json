@@ -2,6 +2,7 @@
     "compilerOptions": {
         "target": "esnext",
         "module": "esnext",
+        "lib": ["esnext"],
         "declaration": true,
         "moduleResolution": "Bundler",
         "moduleDetection": "force",
@@ -9,6 +10,6 @@
         "strictNullChecks": true,
         "paths": {
             "@/*": ["./*"]
-        }
+        },
     }
 }

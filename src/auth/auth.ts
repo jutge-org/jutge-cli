@@ -1,7 +1,8 @@
 import { Command } from "@commander-js/extra-typings"
-import { authAccountCmd } from "./auth-account"
+import { accountCmd } from "./accounts"
 import { _getActiveAccount, getActiveAccountName, login, logout } from "./credentials-file"
 import { password as inputPassword, input } from "@inquirer/prompts"
+import { printStdout } from "../print"
 
 /*
 
@@ -42,27 +43,23 @@ using the default one.
 
 */
 
-export const authCmd = new Command("auth").description("Manage Jutge.org credentials")
+// TODO(pauek): Option to renew credentials (--renew)?
 
-authCmd
-    .command("login")
+export const loginCmd = new Command("login")
     .description("Login to Jutge.org")
     .option("-e, --email <email>", "Email")
     .option("-p, --password <password>", "Password")
     .option("-a, --account <name>", "Account to use (instead of the active one)")
     .action(async ({ account, email, password }) => {
         const _account = account || (await getActiveAccountName())
-        console.log(`Logging in for account '${_account}'`)
-        console.log(await login(_account, email, password))
+        printStdout(await login(_account, email, password))
     })
 
-authCmd
-    .command("logout")
+export const logoutCmd = new Command("logout")
     .description("Logout from Jutge.org")
     .option("-a, --account <name>", "Account to use (instead of the active one)")
     .action(async ({ account }) => {
         const _account = account || (await getActiveAccountName())
-        console.log(await logout(_account))
+        printStdout(await logout(_account))
     })
 
-authCmd.addCommand(authAccountCmd)

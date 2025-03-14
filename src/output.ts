@@ -1,8 +1,8 @@
 import { Static, Type } from "@sinclair/typebox"
 import { Value } from "@sinclair/typebox/value"
-import chalk from "chalk"
 import Table from "cli-table3"
 import yml from "yaml"
+import { printStdout } from "./print"
 import { isObject } from "./utils"
 
 export const TTestcase = Type.Object({
@@ -12,35 +12,20 @@ export const TTestcase = Type.Object({
 })
 type Testcase = Static<typeof TTestcase>
 
-export const normal = (x: any) => console.log(x)
-export const error = (x: any) => console.log(chalk.red(x))
-
-export const warning = (x: any) => {
-    console.log(chalk.yellow(x))
-}
-
-export const success = (x: any) => {
-    console.log(chalk.green(x))
-}
-
-export const primary = (x: any) => {
-    console.log(chalk.blue(x))
-}
-
 export const verticalTable = (data: any) => {
     let table = new Table()
     for (const key in data) {
         table.push({ [key]: data[key] })
     }
-    console.log(table.toString())
+    printStdout(table.toString())
 }
 
 export const printJson = (data: any) => {
-    console.log(JSON.stringify(data, null, 2))
+    printStdout(JSON.stringify(data, null, 2))
 }
 
 export const printYaml = (data: any) => {
-    console.log(yml.stringify(data))
+    printStdout(yml.stringify(data))
 }
 
 export const printCsv = (data: any) => {
@@ -49,36 +34,38 @@ export const printCsv = (data: any) => {
     }
     if (typeof data === "object" && !Array.isArray(data)) {
         const keys = Object.keys(data)
-        console.log(keys.join(";"))
-        console.log(keys.map((k) => printValue(data[k])).join(";"))
+        printStdout(keys.join(";"))
+        printStdout(keys.map((k) => printValue(data[k])).join(";"))
     }
 }
 
 const MAX_COL_WIDTH = 80
 
-export const printTable = (data: Record<string, Record<string, any>>) => {
-    const numItems = Object.keys(data).length
-    if (numItems > 0) {
-        const entries = Object.entries(data)
-        const head = Object.keys(entries[0][1])
+export const printDictionaryAsTable = (data: Record<string, Record<string, any>>) => {
+    printArrayAsTable(Object.values(data))
+}
 
-        // Compute the maximum widths and truncate them if they are too long
-        let maxWidths = head.map((h) => h.length + 2)
-        for (const [_, value] of entries) {
-            const lengths = Object.values(value).map((x) => String(x).length + 2)
-            maxWidths = maxWidths.map((mx, j) => Math.max(mx, lengths[j]))
-        }
-        const colWidths = maxWidths.map((x) => Math.min(x, MAX_COL_WIDTH))
+export const printArrayAsTable = (data: Record<string, any>[]) => {
+    const head = Object.keys(data[0])
 
-        // Create the table and fill it
-        const table = new Table({ head, wordWrap: true, colWidths })
-        for (const [_, value] of entries) {
-            table.push(Object.values(value))
-        }
-
-        // Print it
-        console.log(table.toString())
+    // Compute the maximum widths and truncate them if they are too long
+    let maxWidths = head.map((h) => h.length + 2)
+    for (const value of data) {
+        const lengths = Object.values(value).map((x) => String(x).length + 2)
+        maxWidths = maxWidths.map((mx, j) => Math.max(mx, lengths[j]))
     }
+    // Compute the max width of the '#' (index) column
+    let indexWidth = String(data.length).length + 2
+    const colWidths = [indexWidth, ...maxWidths].map((x) => Math.min(x, MAX_COL_WIDTH))
+
+    // Create the table and fill it
+    const table = new Table({ head: ['#', ...head], wordWrap: true, colWidths })
+    for (let i = 0; i < data.length; i++) {
+        table.push([i+1, ...Object.values(data[i])])
+    }
+
+    // Print it
+    printStdout(table.toString())
 }
 
 export const printObject = (data: Record<string, any>) => {
@@ -105,7 +92,7 @@ export const printObject = (data: Record<string, any>) => {
         }
 
         // Print it
-        console.log(table.toString())
+        printStdout(table.toString())
     }
 }
 
@@ -125,26 +112,36 @@ const arrayEqual = (a: any[], b: any[]) => {
     return a.length === b.length && sameElements(new Set(a), new Set(b))
 }
 
-export const isTableData = (data: any) => {
-    if (typeof data !== "object") {
+const sameColumns = (objects: Record<string, any>[]) => {
+    let [first, ...rest] = objects
+    if (typeof first !== "object" || first === null) {
         return false
     }
-    if (Array.isArray(data)) {
-        return false
-    }
-    let columns: string[] = []
-    for (const key in data) {
-        const cols = Object.keys(data[key])
-        if (columns.length === 0) {
-            columns = cols
-        } else if (!arrayEqual(columns, cols)) {
+    let firstColumns: string[] = Object.keys(first)
+    for (const value of rest) {
+        if (typeof value !== "object" || value === null) {
             return false
         }
-        if (typeof data[key] !== "object") {
+        const columns = Object.keys(value)
+        if (!arrayEqual(firstColumns, columns)) {
             return false
         }
     }
     return true
+}
+
+export const isDictionaryOfObjects = (data: any) => {
+    if (typeof data !== "object" || Array.isArray(data)) {
+        return false
+    }
+    return sameColumns(Object.values(data))
+}
+
+export const isArrayOfObjects = (data: any) => {
+    if (!Array.isArray(data)) {
+        return false
+    }
+    return sameColumns(data)
 }
 
 const writeTestcase = async (testcases: Testcase[]) => {
@@ -156,22 +153,9 @@ const writeTestcase = async (testcases: Testcase[]) => {
     }
 }
 
-export const printApiOutput = async (output: any) => {
-    if (isTableData(output)) {
-        printTable(output)
-    } else if (typeof output === "object" && !Array.isArray(output)) {
-        printObject(output)
-    } else if (Value.Check(Type.Array(TTestcase), output)) {
-        // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
-        await writeTestcase(output)
-    } else if (output) {
-        console.log(output)
-    }
-}
-
 const writeFile = async (filename: string, content: any) => {
     await Bun.write(filename, content)
-    console.log(`Wrote '${filename}'`)
+    printStdout(`Wrote '${filename}'`)
 }
 
 export const writeFiles = async (ofiles: { content: Uint8Array; name: string }[]) => {

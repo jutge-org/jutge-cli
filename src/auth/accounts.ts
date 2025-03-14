@@ -8,38 +8,39 @@ import {
     renameAccount,
     setActiveAccount
 } from "./credentials-file"
+import { printStdout } from "../print"
 
-export const authAccountCmd = new Command("account").description("Manage Jutge.org accounts")
+export const accountCmd = new Command("accounts").description("Manage accounts in this CLI")
 
-authAccountCmd.command("debug")
+accountCmd.command("debug")
     .description("Debug")
     .action(async () => {
         await debugCredentials()
     })
 
-authAccountCmd.command("add")
+accountCmd.command("add")
     .description("Register a new Jutge.org account to the CLI")
     .requiredOption("-e, --email <email>", "Account's email")
     .argument("name", "Account name")
     .action(async (name, { email }) => {
-        console.log(await addAccount(name, email))
+        printStdout(await addAccount(name, email))
     })
 
-authAccountCmd.command("remove")
+accountCmd.command("remove")
     .description("Remove an account from the CLI")
     .argument("name", "Account name")
     .action(async (name) => {
-        console.log(await removeAccount(name))
+        printStdout(await removeAccount(name))
     })
 
-authAccountCmd.command("use")
+accountCmd.command("use")
     .description("Establish a certain account as the current one")
     .argument("name", "Account name")
     .action(async (name) => {
-        console.log(await setActiveAccount(name))
+        printStdout(await setActiveAccount(name))
     })
 
-authAccountCmd.command("list")
+accountCmd.command("list")
     .description("List all the accounts")
     .action(async () => {
         const accounts = await getAllAccounts()
@@ -54,14 +55,14 @@ authAccountCmd.command("list")
             if (isLoggedIn(account)) {
                 line += ` (logged in until ${account.expiration!.toLocaleString()})`
             }
-            console.log(line)
+            printStdout(line)
         }
     })
 
-authAccountCmd.command("rename")
+accountCmd.command("rename")
     .description("Change the name of an account")
     .argument("name", "Account name")
     .argument("newName", "New account name")
     .action(async (name, newName) => {
-        console.log(await renameAccount(name, newName))
+        printStdout(await renameAccount(name, newName))
     })

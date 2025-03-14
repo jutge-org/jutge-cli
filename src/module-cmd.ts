@@ -9,12 +9,17 @@ import { Endpoint, Module } from "./directory/types-typebox"
 import { UnauthorizedError } from "./errors"
 import { Download, jutgeApiCall } from "./jutge-api-call"
 import {
-    isTableData,
+    isArrayOfObjects,
+    isDictionaryOfObjects,
+    printArrayAsTable,
     printCsv,
+    printDictionaryAsTable,
     printJson,
     printObject as printObjectTable,
     printYaml,
 } from "./output"
+import { printStdout } from "./print"
+import { isArray } from "util"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -39,7 +44,7 @@ const writeOutputFile = async (filename: string, content: any) => {
         filename = `${base} (${i})${ext}`
     }
     await writeFile(filename, content)
-    console.log(`Wrote '${filename}'`)
+    printStdout(`Wrote '${filename}'`)
 }
 
 const writeTestcase = async (testcases: Testcase[]) => {
@@ -56,10 +61,10 @@ const showArgsAndOptions =
     async (...args) => {
         const _command = args.pop() as Command
         const options = args.pop()
-        console.log(`Calling "${funcName}"`)
-        console.log("Args:", JSON.stringify(args, null, 2))
-        console.log("Options:", JSON.stringify(options, null, 2))
-        console.log("Command: ", _command.name())
+        printStdout(`Calling "${funcName}"`)
+        printStdout("Args:", JSON.stringify(args, null, 2))
+        printStdout("Options:", JSON.stringify(options, null, 2))
+        printStdout("Command: ", _command.name())
     }
 
 const parseArgs = async (args: any[], endpoint: Endpoint) => {
@@ -161,28 +166,36 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
 }
 
 const showResult = async (output: any, format: OutputFormat) => {
-    if (Value.Check(Type.Array(TTestcase), output)) {
-        // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
-        await writeTestcase(output)
-    } else if (format === "raw") {
-        console.log(output)
+    if (format === "raw") {
+        printStdout(output)
     } else if (format === "json") {
         printJson(output)
     } else if (format === "yaml") {
         printYaml(output)
     } else if (format === "csv") {
         printCsv(output)
-    } else if (format === "table" || (format === null && isTableData(output))) {
-        if (typeof output === "object") {
+    } else if (format === "table") {
+        if (isDictionaryOfObjects(output)) {
+            printDictionaryAsTable(output)
+        } else if (isArrayOfObjects(output)) {
+            printArrayAsTable(output)
+        } else if (typeof output === "object") {
             printObjectTable(output)
-        } else if (isTableData(output)) {
-            console.log(`warning: data does not seem to fit into a table`)
-            console.log(output)
+        } else {
+            printStdout(`warning: data does not seem to fit into a table`)
+            printStdout(output)
         }
-    } else if (typeof output === "object" && !Array.isArray(output)) {
+    } else if (Value.Check(Type.Array(TTestcase), output)) {
+        // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
+        await writeTestcase(output)
+    } else if (isDictionaryOfObjects(output)) {
+        printDictionaryAsTable(output)
+    } else if (isArrayOfObjects(output)) {
+        printArrayAsTable(output)
+    } else if (typeof output === "object") {
         printObjectTable(output)
     } else {
-        console.log(output)
+        printStdout(output)
     }
 }
 

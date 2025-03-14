@@ -1,7 +1,6 @@
 import { Value } from "@sinclair/typebox/value"
-import { ApiDir, Endpoint, Module } from "./types-typebox"
 import { jsonSchema2Typebox } from "./json-schema-to-typebox"
-import { writeFile } from "fs/promises"
+import { ApiDir, Endpoint, Module } from "./types-typebox"
 
 export const loadDirectory = async () => {
     const response = await fetch("https://api.jutge.org/api/dir")

@@ -1,4 +1,5 @@
 import { ProtocolError, throwError } from "./errors"
+import { printStdout } from "./print"
 
 export interface Download {
     readonly content: Uint8Array
@@ -24,7 +25,7 @@ export const jutgeApiCall = async (
     }
 
     if (debug) {
-        console.log("input", idata)
+        printStdout("input", idata)
     }
 
     // send request
@@ -39,7 +40,7 @@ export const jutgeApiCall = async (
     const oform = await response.formData()
     const odata = oform.get("data")
     if (debug) {
-        console.log("output", odata)
+        printStdout("output", odata)
     }
 
     const { output, error, duration, operation_id, time } = JSON.parse(odata as string)

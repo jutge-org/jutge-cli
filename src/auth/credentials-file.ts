@@ -4,6 +4,8 @@ import { existsSync } from "fs"
 import { mkdir, readFile, writeFile } from "fs/promises"
 import { jutgeApiCall } from "../jutge-api-call"
 import { password as inputPassword, input } from "@inquirer/prompts"
+import { printStdout } from "../print"
+import chalk from "chalk"
 
 const TCredentials = Type.Object({
     user_uid: Type.String(),
@@ -22,18 +24,24 @@ const STATE_DIR = `${process.env.HOME}/.local/state/jutge.org`
 const CREDENTIALS_FILENAME = `${STATE_DIR}/credentials.json`
 const DEFAULT_ACCOUNT_NAME = "default"
 
+const DEFAULT_ACCOUNT_DATA = {
+    email: "<empty>",
+    user_uid: "<empty>",
+    token: "<empty>",
+    active: true,
+}
+
 const INITIAL_CREDENTIALS_DATA: CredentialsData = {
-    [DEFAULT_ACCOUNT_NAME]: {
-        email: "<empty>",
-        user_uid: "<empty>",
-        token: "<empty>",
-        active: true,
-    },
+    [DEFAULT_ACCOUNT_NAME]: DEFAULT_ACCOUNT_DATA,
 }
 
 export const isDefaultAccount = (name: string) => name === DEFAULT_ACCOUNT_NAME
 
 const _activateAccount = (accounts: CredentialsData, activeAccountName: string) => {
+    if (Object.keys(accounts).length === 0) {
+        accounts[DEFAULT_ACCOUNT_NAME] = DEFAULT_ACCOUNT_DATA
+        return
+    }
     // Ensure only the active account is really active
     for (const name in accounts) {
         if (name === activeAccountName) {
@@ -69,10 +77,11 @@ const _readFile = async (): Promise<CredentialsData> => {
     try {
         const credentialsData = Value.Parse(TCredentialsData, data)
         _ensureOneActiveAccount(credentialsData)
+        await _saveFile(credentialsData)
         return credentialsData
     } catch (e) {
         // If the file is corrupted, reset it to the default
-        console.warn(`Warning: error parsing credentials file, resetting to default`)
+        printStdout(chalk.redBright(`Warning: error parsing credentials file, resetting to default`))
         await _saveFile(INITIAL_CREDENTIALS_DATA)
         return INITIAL_CREDENTIALS_DATA
     }
@@ -106,7 +115,7 @@ export const setActiveAccount = async (name: string): Promise<string> => {
     }
     _activateAccount(accounts, name)
     await _saveFile(accounts)
-    return `Active account set to '${name}'`
+    return `Active account is now '${name}'`
 }
 
 export const addAccount = async (name: string, email: string): Promise<string> => {
@@ -124,6 +133,9 @@ export const addAccount = async (name: string, email: string): Promise<string> =
 }
 
 export const removeAccount = async (name: string): Promise<string> => {
+    if (name === DEFAULT_ACCOUNT_NAME) {
+        return `Cannot remove the '${DEFAULT_ACCOUNT_NAME}' account`
+    }
     const accounts = await _readFile()
     if (!(name in accounts)) {
         return `Account '${name}' does not exist`
@@ -152,7 +164,11 @@ export const getAllAccounts = async (): Promise<Record<string, Credentials>> => 
     return await _readFile()
 }
 
-export const login = async (accountName: string, _email?: string, _password?: string): Promise<string> => {
+export const login = async (
+    accountName: string,
+    _email?: string,
+    _password?: string,
+): Promise<string> => {
     const accounts = await _readFile()
     const account = accounts[accountName]
     if (account === undefined) {
@@ -169,32 +185,47 @@ export const login = async (accountName: string, _email?: string, _password?: st
         }
     }
 
-    if (account.email === "<empty>") {
-        // Prompt for email if we don't have it
-        account.email = _email || await input({ message: "email:" })
-    } else if (_email && account.email !== _email) {
-        console.warn(`Warning: changing email from '${account.email}' to '${_email}'.`)
-        account.email = _email
-    } else if (_email && account.email === _email) {
-        console.warn(`Note: email for account ${accountName} is already '${_email}', you don't need to provide it.`)
+    try {
+        printStdout(`Logging in for account '${accountName}': (${_email || account.email})`)
+
+        if (account.email === "<empty>") {
+            // Prompt for email if we don't have it
+            account.email = _email || (await input({ message: "email:" }))
+        } else if (_email && account.email !== _email) {
+            printStdout(
+                chalk.yellowBright(`Warning: changing email from '${account.email}' to '${_email}'.`),
+            )
+            account.email = _email
+        } else if (_email && account.email === _email) {
+            printStdout(
+                chalk.yellowBright(
+                    `Note: email for account ${accountName} is already '${_email}', you can omit it.`,
+                ),
+            )
+        }
+
+        const password = _password || (await inputPassword({ message: "password:" }))
+        const [result] = await jutgeApiCall("auth.login", {
+            email: account.email,
+            password,
+        })
+        if (result.error) {
+            return `Error logging in: ${result.error}`
+        }
+
+        account.token = result.token
+        account.user_uid = result.user_uid
+        account.expiration = result.expiration
+
+        await _saveFile(accounts)
+
+        return `Logged in as '${account.email}' ('${accountName}' account).`
+    } catch (e) {
+        if (e.name === "ExitPromptError") {
+            return `interrupted`
+        }
+        throw e
     }
-
-    const password = _password || await inputPassword({ message: "password:" })
-    const [result] = await jutgeApiCall("auth.login", {
-        email: account.email,
-        password,
-    })
-    if (result.error) {
-        return `Error logging in: ${result.error}`
-    }
-
-    account.token = result.token
-    account.user_uid = result.user_uid
-    account.expiration = result.expiration
-
-    await _saveFile(accounts)
-
-    return `Logged in as '${account.email}' (${accountName} account).`
 }
 
 export const logout = async (accountName: string) => {
@@ -213,7 +244,7 @@ export const logout = async (accountName: string) => {
 
 export const debugCredentials = async () => {
     const data = await _readFile()
-    console.log(data)
+    printStdout(data)
 }
 
 export const isLoggedIn = (account: Credentials) => {
@@ -233,7 +264,7 @@ export const applyCredentials = async (accountName?: string | undefined) => {
     }
     const account = accounts[accountName]
     if (account === undefined) {
-        console.warn(`Warning: account '${accountName}' does not exist`)
+        printStdout(chalk.redBright(`Warning: account '${accountName}' does not exist`))
         return
     }
     if (account.token !== "<empty>") {
