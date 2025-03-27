@@ -386,7 +386,7 @@ export const changeDefaultFormat = async (format: string, accountName?: string) 
 
 export const getDefaultFormat = async (): Promise<OutputFormat> => {
     const credentials = await _readCredentials()
-    const accountName = await _getActiveAccountName(credentials)
+    const accountName = _getActiveAccountName(credentials)
     const account = credentials[accountName]
     if (account === undefined) {
         return null
