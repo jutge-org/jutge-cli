@@ -310,11 +310,6 @@ export const logout = async (accountName: string | undefined) => {
     })
 }
 
-export const debugCredentials = async () => {
-    const data = await _readCredentials()
-    printStdout(data)
-}
-
 export const isLoggedIn = (account: Credentials) => {
     if (account.token === "<empty>") {
         return false
@@ -391,7 +386,7 @@ export const changeDefaultFormat = async (format: string, accountName?: string) 
 
 export const getDefaultFormat = async (): Promise<OutputFormat> => {
     const credentials = await _readCredentials()
-    const [accountName] = await _getActiveAccountName(credentials)
+    const accountName = await _getActiveAccountName(credentials)
     const account = credentials[accountName]
     if (account === undefined) {
         return null
