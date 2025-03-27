@@ -1,10 +1,11 @@
 import { Command } from "@commander-js/extra-typings"
 import { Static, Type } from "@sinclair/typebox"
 import { Value } from "@sinclair/typebox/value"
+import { File } from "buffer"
 import { existsSync } from "fs"
 import { readFile, writeFile } from "fs/promises"
 import { basename, extname } from "path"
-import { applyCredentials } from "./auth/credentials-file"
+import { applyCredentials, getDefaultFormat } from "./auth/credentials-file"
 import { Endpoint, Module } from "./directory/types-typebox"
 import { UnauthorizedError } from "./errors"
 import { Download, jutgeApiCall } from "./jutge-api-call"
@@ -19,7 +20,6 @@ import {
     printYaml,
 } from "./output"
 import { printStdout } from "./print"
-import { File } from "buffer"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -28,7 +28,7 @@ export const TTestcase = Type.Object({
 })
 type Testcase = Static<typeof TTestcase>
 
-type OutputFormat = "json" | "table" | "yaml" | "csv" | "raw" | null
+export type OutputFormat = "json" | "table" | "yaml" | "csv" | "raw" | null
 
 const getDescription = (description: string | undefined | null) =>
     description ? description.split(`\n`)[0] : "<undocumented>"
@@ -165,27 +165,8 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
     return { params, options, ifiles: inputFiles }
 }
 
-const showResult = async (output: any, format: OutputFormat) => {
-    if (format === "raw") {
-        printStdout(output)
-    } else if (format === "json") {
-        printJson(output)
-    } else if (format === "yaml") {
-        printYaml(output)
-    } else if (format === "csv") {
-        printCsv(output)
-    } else if (format === "table") {
-        if (isDictionaryOfObjects(output)) {
-            printDictionaryAsTable(output)
-        } else if (isArrayOfObjects(output)) {
-            printArrayAsTable(output)
-        } else if (typeof output === "object") {
-            printObjectTable(output)
-        } else {
-            printStdout(`warning: data does not seem to fit into a table`)
-            printStdout(output)
-        }
-    } else if (Value.Check(Type.Array(TTestcase), output)) {
+const showResultDeducingFormat = async (output: any) => {
+    if (Value.Check(Type.Array(TTestcase), output)) {
         // FIXME(pauek): This is a little ugly, we make an exception for TTestcase (test cases for problems)
         await writeTestcase(output)
     } else if (isDictionaryOfObjects(output)) {
@@ -196,6 +177,39 @@ const showResult = async (output: any, format: OutputFormat) => {
         printObjectTable(output)
     } else {
         printStdout(output)
+    }
+}
+
+const printTable = async (output: any) => {
+    if (isDictionaryOfObjects(output)) {
+        printDictionaryAsTable(output)
+    } else if (isArrayOfObjects(output)) {
+        printArrayAsTable(output)
+    } else if (typeof output === "object") {
+        printObjectTable(output)
+    } else {
+        printStdout(`warning: data does not seem to fit into a table`)
+        printStdout(output)
+    }
+}
+
+const showResult = async (output: any, format: OutputFormat) => {
+    const userDefault = await getDefaultFormat()
+
+    const wantFormat = (f: OutputFormat) => format === f || (format === null && userDefault === f)
+
+    if (wantFormat("raw")) {
+        printStdout(output)
+    } else if (wantFormat("json")) {
+        printJson(output)
+    } else if (wantFormat("yaml")) {
+        printYaml(output)
+    } else if (wantFormat("csv")) {
+        printCsv(output)
+    } else if (wantFormat("table")) {
+        printTable(output)
+    } else {
+        showResultDeducingFormat(output)
     }
 }
 

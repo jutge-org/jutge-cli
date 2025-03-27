@@ -1,5 +1,4 @@
 import { Static, Type } from "@sinclair/typebox"
-import { Value } from "@sinclair/typebox/value"
 import Table from "cli-table3"
 import yml from "yaml"
 import { printStdout } from "./print"

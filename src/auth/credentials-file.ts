@@ -1,11 +1,23 @@
+import { input, password as inputPassword } from "@inquirer/prompts"
 import { Static, Type } from "@sinclair/typebox"
 import { Value } from "@sinclair/typebox/value"
+import chalk from "chalk"
 import { existsSync } from "fs"
 import { mkdir, readFile, writeFile } from "fs/promises"
 import { jutgeApiCall } from "../jutge-api-call"
-import { password as inputPassword, input } from "@inquirer/prompts"
+import { OutputFormat } from "../module-cmd"
 import { printStdout } from "../print"
-import chalk from "chalk"
+
+const formatNames = ["json", "yaml", "csv", "table", "raw"]
+
+const TFormat = Type.Union([
+    Type.Literal("json"),
+    Type.Literal("yaml"),
+    Type.Literal("csv"),
+    Type.Literal("table"),
+    Type.Literal("raw"),
+])
+type Format = Static<typeof TFormat>
 
 const TCredentials = Type.Object({
     user_uid: Type.String(),
@@ -13,6 +25,7 @@ const TCredentials = Type.Object({
     token: Type.String(),
     expiration: Type.Optional(Type.Date()),
     active: Type.Optional(Type.Boolean()),
+    defaultFormat: Type.Optional(TFormat),
 })
 type Credentials = Static<typeof TCredentials>
 
@@ -81,7 +94,9 @@ const _readFile = async (): Promise<CredentialsData> => {
         return credentialsData
     } catch (e) {
         // If the file is corrupted, reset it to the default
-        printStdout(chalk.redBright(`Warning: error parsing credentials file, resetting to default`))
+        printStdout(
+            chalk.redBright(`Warning: error parsing credentials file, resetting to default`),
+        )
         await _saveFile(INITIAL_CREDENTIALS_DATA)
         return INITIAL_CREDENTIALS_DATA
     }
@@ -193,7 +208,9 @@ export const login = async (
             account.email = _email || (await input({ message: "email:" }))
         } else if (_email && account.email !== _email) {
             printStdout(
-                chalk.yellowBright(`Warning: changing email from '${account.email}' to '${_email}'.`),
+                chalk.yellowBright(
+                    `Warning: changing email from '${account.email}' to '${_email}'.`,
+                ),
             )
             account.email = _email
         } else if (_email && account.email === _email) {
@@ -270,4 +287,31 @@ export const applyCredentials = async (accountName?: string | undefined) => {
     if (account.token !== "<empty>") {
         jutgeApiCall.meta = { token: account.token }
     }
+}
+
+export const changeDefaultFormat = async (format: string, accountName?: string) => {
+    const accounts = await _readFile()
+    if (accountName === undefined) {
+        accountName = await getActiveAccountName()
+    }
+    const account = accounts[accountName]
+    if (account === undefined) {
+        return chalk.redBright(`Warning: account '${accountName}' does not exist`)
+    }
+    if (!formatNames.includes(format)) {
+        return `Unknown format '${format}'`
+    }
+    account.defaultFormat = format as Format
+    await _saveFile(accounts)
+    return `Default format for account \`${accountName}\` is now "${format}"`
+}
+
+export const getDefaultFormat = async (): Promise<OutputFormat> => {
+    const credentials = await _readFile()
+    const [accountName] = await _getActiveAccount(credentials)
+    const account = credentials[accountName]
+    if (account === undefined) {
+        return null
+    }
+    return account.defaultFormat || null
 }
