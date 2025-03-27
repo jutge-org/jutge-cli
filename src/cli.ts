@@ -15,10 +15,10 @@ export const createCli = async () => {
             .description(`Jutge.org CLI [${chalk.blue(JUTGE_API_URL)}]`)
         cli.addCommand(loginCmd)
         cli.addCommand(logoutCmd)
+        cli.addCommand(accountCmd)
         for (const module of directory.root.submodules) {
             cli.addCommand(moduleCommand(module, ""))
         }
-        cli.addCommand(accountCmd)
         cli.addCommand(versionCmd)
         return cli
     } catch (e) {
