@@ -1,24 +1,38 @@
 import { Command } from "@commander-js/extra-typings"
+import { printStdout } from "../print"
+import { accountsManualText } from "./accounts-manual"
 import {
     addAccount,
-    debugCredentials,
     getAllAccounts,
     isLoggedIn,
     removeAccount,
     renameAccount,
     setActiveAccount
 } from "./credentials-file"
-import { printStdout } from "../print"
 
 export const accountCmd = new Command("accounts").description("Manage accounts in this CLI")
 
-accountCmd.command("debug")
-    .description("Debug")
-    .action(async () => {
-        await debugCredentials()
+accountCmd
+    .command("manual")
+    .description("Show the manual for the CLI accounts.")
+    .action(() => {
+        const lines = accountsManualText.split("\n")
+        // Wrap long lines to at most 70 characters
+        for (let line of lines) {
+            while (line.length > 70) {
+                const lastSpace = line.lastIndexOf(" ", 70)
+                if (lastSpace === -1) {
+                    break
+                }
+                printStdout(line.slice(0, lastSpace))
+                line = line.slice(lastSpace + 1)
+            }
+            printStdout(line)
+        }
     })
 
-accountCmd.command("add")
+accountCmd
+    .command("add")
     .description("Register a new Jutge.org account to the CLI")
     .requiredOption("-e, --email <email>", "Account's email")
     .argument("name", "Account name")
@@ -26,21 +40,24 @@ accountCmd.command("add")
         printStdout(await addAccount(name, email))
     })
 
-accountCmd.command("remove")
+accountCmd
+    .command("remove")
     .description("Remove an account from the CLI")
     .argument("name", "Account name")
     .action(async (name) => {
         printStdout(await removeAccount(name))
     })
 
-accountCmd.command("use")
+accountCmd
+    .command("use")
     .description("Establish a certain account as the current one")
     .argument("name", "Account name")
     .action(async (name) => {
         printStdout(await setActiveAccount(name))
     })
 
-accountCmd.command("list")
+accountCmd
+    .command("list")
     .description("List all the accounts")
     .action(async () => {
         const accounts = await getAllAccounts()
@@ -59,7 +76,8 @@ accountCmd.command("list")
         }
     })
 
-accountCmd.command("rename")
+accountCmd
+    .command("rename")
     .description("Change the name of an account")
     .argument("name", "Account name")
     .argument("newName", "New account name")
