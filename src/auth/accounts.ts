@@ -20,7 +20,7 @@ accountCmd
         // Wrap long lines to at most 70 characters
         for (let line of lines) {
             while (line.length > 70) {
-                const lastSpace = line.lastIndexOf(" ", 70)
+                const lastSpace = line.lastIndexOf(" ", Math.min(process.stdout.columns, 70))
                 if (lastSpace === -1) {
                     break
                 }
