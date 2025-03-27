@@ -243,10 +243,9 @@ const processSpecialOptions = async (
         }
     }
 
-    // Treat -a, --account specially
     if (endpoint.actor !== undefined) {
         if (options && options.account) {
-            // Use the supplied credentials for this command
+            // Treat -a, --account specially
             await applyCredentials(options.account)
             deleteOption("account")
         } else {

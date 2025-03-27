@@ -8,6 +8,7 @@ import {
     isLoggedIn,
     removeAccount,
     renameAccount,
+    saveAccountPassword,
     setActiveAccount,
 } from "./credentials-file"
 
@@ -70,10 +71,27 @@ accountCmd
 accountCmd
     .command("default-format")
     .description("Set the default output format for an account")
-    .option("-a, --account <account>", "Account for which to change format (default: active account)")
+    .option(
+        "-a, --account <account>",
+        "Account for which to change format (default: active account)",
+    )
     .argument("format", "Output format (json, table, yaml, csv, or raw)")
     .action(async (format, { account }) => {
         printStdout(await changeDefaultFormat(format, account))
+    })
+
+accountCmd
+    .command("save-password")
+    .description(
+        `Save the password locally for an account.
+WARNING: the password will be stored in your \`.local/state/jutge-org\` directory and it is NOT encrypted.`,
+    )
+    .option(
+        "-a, --account <account>",
+        "Account for which to change format (default: active account)",
+    )
+    .action(async ({ account }) => {
+        printStdout(await saveAccountPassword(account))
     })
 
 accountCmd

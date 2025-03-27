@@ -1,8 +1,6 @@
 import { Command } from "@commander-js/extra-typings"
-import { accountCmd } from "./accounts"
-import { _getActiveAccount, getActiveAccountName, login, logout } from "./credentials-file"
-import { password as inputPassword, input } from "@inquirer/prompts"
 import { printStdout } from "../print"
+import { login, logout } from "./credentials-file"
 
 /*
 
@@ -51,15 +49,12 @@ export const loginCmd = new Command("login")
     .option("-p, --password <password>", "Password")
     .option("-a, --account <name>", "Account to use (instead of the active one)")
     .action(async ({ account, email, password }) => {
-        const _account = account || (await getActiveAccountName())
-        printStdout(await login(_account, email, password))
+        printStdout(await login(account, email, password))
     })
 
 export const logoutCmd = new Command("logout")
     .description("Logout from Jutge.org")
     .option("-a, --account <name>", "Account to use (instead of the active one)")
     .action(async ({ account }) => {
-        const _account = account || (await getActiveAccountName())
-        printStdout(await logout(_account))
+        printStdout(await logout(account))
     })
-
