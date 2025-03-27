@@ -1,3 +1,4 @@
+import { JUTGE_API_URL } from "./env"
 import { ProtocolError, throwError } from "./errors"
 import { printStdout } from "./print"
 import { File } from "buffer"
@@ -8,7 +9,6 @@ export interface Download {
     readonly type: string
 }
 
-const JUTGE_API_URL = process.env.JUTGE_API_URL || "https://api.jutge.org/api"
 
 export const jutgeApiCall = async (
     func: string,
