@@ -342,6 +342,7 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     }
     if (endpoint.ifiles === "one") {
         addInputFile(cmd)
+        numArgs++;
     }
     if (endpoint.ofiles === "one") {
         cmd.option("-o, --output <filename>", "Override output filename")
