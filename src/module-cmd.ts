@@ -20,6 +20,7 @@ import {
     printYaml,
 } from "./output"
 import { printStdout } from "./print"
+import { isEmptyObject } from "./utils"
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -56,30 +57,26 @@ const writeTestcase = async (testcases: Testcase[]) => {
     }
 }
 
-const showArgsAndOptions =
-    (funcName: string, endpoint: Endpoint) =>
-    async (...args) => {
-        const _command = args.pop() as Command
-        const options = args.pop()
-        printStdout(`Calling "${funcName}"`)
-        printStdout("Args:", JSON.stringify(args, null, 2))
-        printStdout("Options:", JSON.stringify(options, null, 2))
-        printStdout("Command: ", _command.name())
+const parseOptionValue = (tschema: any, value: any) => {
+    if (tschema.type === "object" || tschema.type === "array") {
+        // First convert value to a Javascript object from JSON
+        value = JSON.parse(value)
     }
+    return Value.Parse(tschema, value)
+}
 
-const parseArgs = async (args: any[], endpoint: Endpoint) => {
-    // args = [params..., options, command]
-    args.pop() // Discard command
-
-    let rawOptions: Record<string, any> | null = args.pop()
-    // NOTE: Should we check that it is an object?
+const parseArgs = async (
+    args: any[],
+    rawOptions: Record<string, string> | null,
+    endpoint: Endpoint,
+) => {
     if (rawOptions && Object.keys(rawOptions).length === 0) {
         rawOptions = null
     }
 
     let inputFiles: File[] = []
     let params: any[] = []
-    let options: Record<string, any> | null = null
+    let options: Record<string, any> = {}
 
     const { input, ifiles, ofiles } = endpoint
 
@@ -105,22 +102,17 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
             case "csv":
             case "raw":
             case "debug":
-                if (options === null) {
-                    options = {}
-                }
                 options[key] = Value.Parse(Type.Boolean(), rawOptions![key])
                 break
             case "account":
             case "output": {
-                if (options === null) {
-                    options = {}
-                }
                 options[key] = Value.Parse(Type.String(), rawOptions![key])
                 break
             }
+            default:
+                options[key] = rawOptions![key]
+                break
         }
-        // Remove these options for the next loop
-        delete rawOptions![key]
     }
 
     if (input.type === "object") {
@@ -137,10 +129,9 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
             }
             for (const key of Object.keys(rawOptions || {})) {
                 const tschema = input.properties[key]
-                if (options === null) {
-                    options = {}
-                }
-                options[key] = Value.Parse(tschema, rawOptions![key])
+                const optionValue = rawOptions![key]
+                const value = parseOptionValue(tschema, optionValue)
+                options[key] = value
             }
         } else if (input.patternProperties) {
             throw new Error("Not implemented")
@@ -162,7 +153,11 @@ const parseArgs = async (args: any[], endpoint: Endpoint) => {
         }
     }
 
-    return { params, options, ifiles: inputFiles }
+    return {
+        params,
+        options: isEmptyObject(options) ? null : options,
+        ifiles: inputFiles,
+    }
 }
 
 const showResultDeducingFormat = async (output: any) => {
@@ -276,8 +271,8 @@ const processSpecialOptions = async (
 
 const callApi =
     (funcName: string, endpoint: Endpoint) =>
-    async (...args) => {
-        const parsed = await parseArgs(args, endpoint)
+    async (args: any[], rawOptions: Record<string, any>) => {
+        const parsed = await parseArgs(args, rawOptions, endpoint)
         const { options, outputFile, format, debug } = await processSpecialOptions(
             endpoint,
             parsed.options,
@@ -324,17 +319,20 @@ const addEndpointOptions = (endpointCmd: Command, endpoint: Endpoint) => {
 
 const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     const cmd = new Command(endpoint.name).description(endpoint.summary || "<undocumented>")
+    let numArgs = 0
 
     if (endpoint.input.param) {
         addArgument(cmd, {
             param: endpoint.input.param,
             description: endpoint.input.description,
         })
+        numArgs++
     } else if (endpoint.input.type === "string") {
         addArgument(cmd, {
             param: "string",
             description: endpoint.input.description,
         })
+        numArgs++
     }
     if (endpoint.input.type === "object" && endpoint.input.properties) {
         addEndpointOptions(cmd, endpoint)
@@ -363,7 +361,7 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     // cmd.action(showArgsAndOptions(funcName))
     cmd.action((...args) => {
         // showArgsAndOptions(funcName, endpoint)(...args)
-        callApi(funcName, endpoint)(...args)
+        callApi(funcName, endpoint)(args.slice(0, numArgs), args[numArgs])
     })
     return cmd
 }
