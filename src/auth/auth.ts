@@ -1,6 +1,6 @@
 import { Command } from "@commander-js/extra-typings"
 import { printStdout } from "../print"
-import { login, logout } from "./credentials-file"
+import { login, logout, examLogin } from "./credentials-file"
 
 /*
 
@@ -50,6 +50,17 @@ export const loginCmd = new Command("login")
     .option("-a, --account <name>", "Account to use (instead of the active one)")
     .action(async ({ account, email, password }) => {
         printStdout(await login(account, email, password))
+    })
+
+export const examLoginCmd = new Command("login-exam")
+    .description("Login to exam.Jutge.org")
+    .option("-e, --email <email>", "Email")
+    .option("-p, --password <password>", "Password")
+    .option("-x, --exam <exam>", "Exam to login to")
+    .option("-s, --secret <secret>", "Secret for the exam")
+    .option("-a, --account <name>", "Account to use (instead of the active one)") // TODO: ??
+    .action(async ({ account, email, password, exam, secret }) => {
+        printStdout(await examLogin(account, email, password, exam, secret))
     })
 
 export const logoutCmd = new Command("logout")

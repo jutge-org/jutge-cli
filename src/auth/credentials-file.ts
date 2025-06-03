@@ -237,6 +237,21 @@ export const loginCall = async (email: string, password: string): Promise<LoginC
     return result
 }
 
+export const examLoginCall = async (
+    email: string,
+    password: string,
+    exam: string,
+    secret: string,
+): Promise<LoginCallResult> => {
+    const [result] = await jutgeApiCall("auth.examLogin", {
+        email,
+        password,
+        exam,
+        exam_password: secret,
+    })
+    return result
+}
+
 const setToken = (account: Credentials, result: LoginCallResult) => {
     account.token = result.token
     account.user_uid = result.user_uid
@@ -275,6 +290,61 @@ export const login = async (
         const password = await getPassword(account, _password)
 
         const result = await loginCall(email, password)
+        if (result.error) {
+            return `Error logging in: ${result.error}`
+        }
+
+        setToken(account, result)
+        await _saveCredentials(accounts)
+
+        return `Logged in as '${account.email}' ('${accountName}' account).`
+    } catch (e) {
+        if (e.name === "ExitPromptError") {
+            return `interrupted`
+        }
+        throw e
+    }
+}
+
+// TODO: this is just a crude copy of the login function, refactor to avoid duplication and control the exam and its secret
+
+export const examLogin = async (
+    accountName: string | undefined,
+    _email?: string,
+    _password?: string,
+    _exam?: string,
+    _secret?: string,
+): Promise<string> => {
+    const accounts = await _readCredentials()
+
+    if (accountName === undefined) {
+        accountName = _getActiveAccountName(accounts)
+    } else if (accounts[accountName] === undefined) {
+        return `Account '${accountName}' does not exist`
+    }
+
+    const account = accounts[accountName]
+    if (account.token !== "<empty>") {
+        if (account.expiration === undefined) {
+            throw new Error(`ERROR: Token present but no expiration time.`)
+        }
+        // Check expiration
+        const now = new Date()
+        if (account.expiration > now) {
+            return `Already logged in ('${accountName}' account).`
+        }
+    }
+
+    try {
+        printStdout(`Logging in for account '${accountName}' (${_email || account.email}):`)
+
+        const email = await getAndSaveEmail(accountName, account, _email)
+        const password = await getPassword(account, _password)
+
+        if (!_exam) throw new Error(`Exam is required for exam login`)
+        if (!_secret) throw new Error(`Secret is required for exam login`)
+
+        const result = await examLoginCall(email, password, _exam, _secret)
         if (result.error) {
             return `Error logging in: ${result.error}`
         }

@@ -1,7 +1,7 @@
 import { Command } from "@commander-js/extra-typings"
 import chalk from "chalk"
 import { accountCmd } from "./auth/accounts"
-import { loginCmd, logoutCmd } from "./auth/auth"
+import { examLoginCmd, loginCmd, logoutCmd } from "./auth/auth"
 import { loadDirectory } from "./directory/load-directory"
 import { JUTGE_API_URL } from "./env"
 import { moduleCommand } from "./module-cmd"
@@ -14,6 +14,7 @@ export const createCli = async () => {
             .name("jutge")
             .description(`Jutge.org CLI [${chalk.blue(JUTGE_API_URL)}]`)
         cli.addCommand(loginCmd)
+        cli.addCommand(examLoginCmd)
         cli.addCommand(logoutCmd)
         cli.addCommand(accountCmd)
         for (const module of directory.root.submodules) {
