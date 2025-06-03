@@ -1,6 +1,6 @@
 # Jutge Command Line Interface
 
-This is a command line interface for the Jutge platform. 
+This is a command line interface for the Jutge platform.
 
 WARNING: This is beta software, don't expect an optimal experience!
 
@@ -25,6 +25,7 @@ bunx @jutge.org/cli misc fortune
 Install [Bun](https://bun.sh), clone this repo and run:
 
 ```bash
+bun install
 bun run build
 ```
 
