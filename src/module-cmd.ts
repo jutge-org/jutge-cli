@@ -338,7 +338,7 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
         addEndpointOptions(cmd, endpoint)
     }
     if (endpoint.actor !== undefined) {
-        cmd.option("-a, --account <name>", "Account to use (instead of the active one)")
+        cmd.option("--account <name>", "Account to use (instead of the active one)")
     }
     if (endpoint.ifiles === "one") {
         addInputFile(cmd)
