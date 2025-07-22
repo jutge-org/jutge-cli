@@ -1,6 +1,6 @@
 {
     "name": "@jutge.org/cli",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "description": "Jutge.org CLI",
     "keywords": [
         "jutge.org",
@@ -33,14 +33,14 @@
     },
     "dependencies": {
         "@commander-js/extra-typings": "^12.1.0",
-        "@inquirer/prompts": "^7.4.0",
-        "@sinclair/typebox": "^0.34.31",
+        "@inquirer/prompts": "^7.7.1",
+        "@sinclair/typebox": "^0.34.38",
         "@sinclair/typebox-codegen": "^0.10.5",
         "chalk": "^5.4.1",
         "cli-table3": "^0.6.5",
         "commander": "^12.1.0",
-        "yaml": "^2.7.0",
-        "zod": "^3.24.2"
+        "yaml": "^2.8.0",
+        "zod": "^3.25.76"
     },
     "scripts": {
         "build": "bun build ./src/index.ts --format esm --target node --banner '#!/usr/bin/env node' --outfile bin/jutge && chmod +x ./bin/jutge"
