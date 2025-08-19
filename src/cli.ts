@@ -6,6 +6,7 @@ import { loadDirectory } from "./directory/load-directory"
 import { JUTGE_API_URL } from "./env"
 import { moduleCommand } from "./module-cmd"
 import { versionCmd } from "./version"
+import { shellCompletionsCmd } from "./shell-complete"
 
 export const createCli = async () => {
     try {
@@ -20,6 +21,7 @@ export const createCli = async () => {
             cli.addCommand(moduleCommand(module, ""))
         }
         cli.addCommand(versionCmd)
+        cli.addCommand(shellCompletionsCmd(cli), { hidden: true })
         return cli
     } catch (e) {
         console.error(`Could not load directory.\n(Jutge API should be at: ${JUTGE_API_URL})\n`)

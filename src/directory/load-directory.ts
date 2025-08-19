@@ -30,24 +30,19 @@ export const loadDirectory = async () => {
         }
     }
 
-    const resolveEndpoint = (endpoint: Endpoint) => {
-        const input = resolveType(endpoint.input)
-        const output = resolveType(endpoint.output)
-        return {
-            ...endpoint,
-            input: jsonSchema2Typebox(input),
-            output: jsonSchema2Typebox(output),
-        }
-    }
+    const resolveEndpoint = (endpoint: Endpoint) => ({
+        ...endpoint,
+        input: jsonSchema2Typebox(resolveType(endpoint.input)),
+        output: jsonSchema2Typebox(resolveType(endpoint.output)),
+    })
 
-    const resolveModule = (module: Module) => {
-        return {
-            ...module,
-            endpoints: module.endpoints.map(resolveEndpoint),
-            submodules: module.submodules.map(resolveModule),
-        }
-    }
+    const resolveModule = (module: Module) => ({
+        ...module,
+        endpoints: module.endpoints.map(resolveEndpoint),
+        submodules: module.submodules.map(resolveModule),
+    })
 
-    const resolved = { info, root: resolveModule(root) }
-    return resolved
+    return { info, root: resolveModule(root) }
 }
+
+export type Directory = Awaited<ReturnType<typeof loadDirectory>>
