@@ -1,7 +1,9 @@
 import { TSchema, Type } from "@sinclair/typebox"
 
 export const jsonSchema2Typebox = (schema: any): TSchema => {
-    if (schema.type === "object") {
+    if (schema.anyOf) {
+        return Type.Any(schema.anyOf.map(jsonSchema2Typebox))
+    } else if (schema.type === "object") {
         if (schema.properties) {
             const required = new Set(schema.required || [])
             const properties = Object.entries(schema.properties)
@@ -23,34 +25,14 @@ export const jsonSchema2Typebox = (schema: any): TSchema => {
     } else if (schema.type === "array") {
         return Type.Array(jsonSchema2Typebox(schema.items))
     } else if (schema.type === "string") {
-        return Type.String({
-            default: schema.default,
-            description: schema.description,
-            param: schema.param,
-            examples: schema.examples,
-        })
+        return Type.String({ ...schema })
     } else if (schema.type === "number" || schema.type === "integer") {
-        return Type.Number({
-            default: schema.default,
-            description: schema.description,
-            param: schema.param,
-            examples: schema.examples,
-        })
+        return Type.Number({ ...schema })
     } else if (schema.type === "boolean") {
-        return Type.Boolean({
-            default: schema.default,
-            description: schema.description,
-            param: schema.param,
-            examples: schema.examples,
-        })
+        return Type.Boolean({ ...schema })
     } else if (schema.type === "null") {
         return Type.Null()
     } else {
-        return Type.Any({
-            default: schema.default,
-            description: schema.description,
-            param: schema.param,
-            examples: schema.examples,
-        })
+        return Type.Any({ ...schema })
     }
 }
