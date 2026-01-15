@@ -1,6 +1,6 @@
+dist
 bun.lockb
 node_modules/
-bin/
 src/client/
 dir.json
 dir-resolved.json
