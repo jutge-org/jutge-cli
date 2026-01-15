@@ -1,8 +1,8 @@
-import { Static, Type } from "@sinclair/typebox"
-import Table from "cli-table3"
-import yml from "yaml"
-import { printStdout } from "./print"
-import { isObject } from "./utils"
+import { type Static, Type } from '@sinclair/typebox'
+import Table from 'cli-table3'
+import yml from 'yaml'
+import { printStdout } from './print'
+import { isObject } from './utils'
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -12,7 +12,7 @@ export const TTestcase = Type.Object({
 type Testcase = Static<typeof TTestcase>
 
 export const verticalTable = (data: any) => {
-    let table = new Table()
+    const table = new Table()
     for (const key in data) {
         table.push({ [key]: data[key] })
     }
@@ -29,12 +29,12 @@ export const printYaml = (data: any) => {
 
 export const printCsv = (data: any) => {
     const printValue = (value: any) => {
-        return typeof value === "string" ? `"${value}"` : value
+        return typeof value === 'string' ? `"${value}"` : value
     }
-    if (typeof data === "object" && !Array.isArray(data)) {
+    if (typeof data === 'object' && !Array.isArray(data)) {
         const keys = Object.keys(data)
-        printStdout(keys.join(";"))
-        printStdout(keys.map((k) => printValue(data[k])).join(";"))
+        printStdout(keys.join(';'))
+        printStdout(keys.map((k) => printValue(data[k])).join(';'))
     }
 }
 
@@ -54,13 +54,13 @@ export const printArrayAsTable = (data: Record<string, any>[]) => {
         maxWidths = maxWidths.map((mx, j) => Math.max(mx, lengths[j]))
     }
     // Compute the max width of the '#' (index) column
-    let indexWidth = String(data.length).length + 2
+    const indexWidth = String(data.length).length + 2
     const colWidths = [indexWidth, ...maxWidths].map((x) => Math.min(x, MAX_COL_WIDTH))
 
     // Create the table and fill it
     const table = new Table({ head: ['#', ...head], wordWrap: true, colWidths })
     for (let i = 0; i < data.length; i++) {
-        table.push([i+1, ...Object.values(data[i])])
+        table.push([i + 1, ...Object.values(data[i])])
     }
 
     // Print it
@@ -77,10 +77,7 @@ export const printObject = (data: Record<string, any>) => {
         // Compute the maximum widths and truncate them if they are too long
         let maxWidths = [0, 0]
         for (const [key, value] of entries) {
-            maxWidths = [
-                Math.max(maxWidths[0], key.length + 2),
-                Math.max(maxWidths[1], strValue(value).length + 2),
-            ]
+            maxWidths = [Math.max(maxWidths[0], key.length + 2), Math.max(maxWidths[1], strValue(value).length + 2)]
         }
         const colWidths = maxWidths.map((x) => Math.min(x, MAX_COL_WIDTH))
 
@@ -112,13 +109,13 @@ const arrayEqual = (a: any[], b: any[]) => {
 }
 
 const sameColumns = (objects: Record<string, any>[]) => {
-    let [first, ...rest] = objects
-    if (typeof first !== "object" || first === null) {
+    const [first, ...rest] = objects
+    if (typeof first !== 'object' || first === null) {
         return false
     }
-    let firstColumns: string[] = Object.keys(first)
+    const firstColumns: string[] = Object.keys(first)
     for (const value of rest) {
-        if (typeof value !== "object" || value === null) {
+        if (typeof value !== 'object' || value === null) {
             return false
         }
         const columns = Object.keys(value)
@@ -130,7 +127,7 @@ const sameColumns = (objects: Record<string, any>[]) => {
 }
 
 export const isDictionaryOfObjects = (data: any) => {
-    if (typeof data !== "object" || Array.isArray(data)) {
+    if (typeof data !== 'object' || Array.isArray(data)) {
         return false
     }
     return sameColumns(Object.values(data))
@@ -146,9 +143,9 @@ export const isArrayOfObjects = (data: any) => {
 const writeTestcase = async (testcases: Testcase[]) => {
     for (const testcase of testcases) {
         const { name, input_b64, correct_b64 } = testcase
-        const base = name.replace(/.inp$/, "")
-        await writeFile(`${base}.inp`, Buffer.from(input_b64, "base64"))
-        await writeFile(`${base}.cor`, Buffer.from(correct_b64, "base64"))
+        const base = name.replace(/.inp$/, '')
+        await writeFile(`${base}.inp`, Buffer.from(input_b64, 'base64'))
+        await writeFile(`${base}.cor`, Buffer.from(correct_b64, 'base64'))
     }
 }
 

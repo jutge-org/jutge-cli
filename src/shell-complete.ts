@@ -1,4 +1,4 @@
-import { Command, CommandUnknownOpts } from "@commander-js/extra-typings"
+import { Command, type CommandUnknownOpts } from '@commander-js/extra-typings'
 
 const _log = (msg: string) => {
     // process.stderr.write(`${msg}\n`)
@@ -18,7 +18,7 @@ const computeAvailableOptions = (index: number, words: string[], jutgeCmd: Comma
         }
         const pos = currCmd.commands.findIndex((c) => c.name() === word)
         if (pos === -1) {
-            _log(`   Didn't find ${word} in ${currCmd.commands.map((c) => c.name()).join(", ")}`)
+            _log(`   Didn't find ${word} in ${currCmd.commands.map((c) => c.name()).join(', ')}`)
             return []
         }
 
@@ -27,9 +27,9 @@ const computeAvailableOptions = (index: number, words: string[], jutgeCmd: Comma
     }
     _log(`Finished loop, cmd is ${currCmd.name()}, k is ${k}`)
     // lookup the next word
-    const word = words[index] || ""
+    const word = words[index] || ''
     _log(`word = '${word}'`)
-    let result: string[] = []
+    const result: string[] = []
     for (let i = 0; i < currCmd.commands.length; i++) {
         const subcmd = currCmd.commands[i]
         _log(`Considering '${subcmd.name()}'`)
@@ -58,19 +58,19 @@ const computeAvailableOptions = (index: number, words: string[], jutgeCmd: Comma
 }
 
 export const shellCompletionsCmd = (jutgeCmd: Command) =>
-    new Command("completions")
-        .description("Generate completions for Bash and Zsh")
-        .argument("i")
-        .argument("args")
+    new Command('completions')
+        .description('Generate completions for Bash and Zsh')
+        .argument('i')
+        .argument('args')
         .helpCommand(false)
         .action((i, args) => {
             const index = Number(i) - 1 // NOTE(pauek): in bash, indices are 1 based!
             if (Number.isNaN(index)) {
                 return
             }
-            const words = args.split(" ")
+            const words = args.split(' ')
 
             const options: string[] = computeAvailableOptions(index, words, jutgeCmd)
             options.sort()
-            console.log(options.map((o) => `${o}\n`).join(""))
+            console.log(options.map((o) => `${o}\n`).join(''))
         })

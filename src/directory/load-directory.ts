@@ -1,7 +1,7 @@
-import { Value } from "@sinclair/typebox/value"
-import { JUTGE_API_URL } from "../env"
-import { jsonSchema2Typebox } from "./json-schema-to-typebox"
-import { ApiDir, Endpoint, Module } from "./types-typebox"
+import { Value } from '@sinclair/typebox/value'
+import { JUTGE_API_URL } from '../env'
+import { jsonSchema2Typebox } from './json-schema-to-typebox'
+import { ApiDir, Endpoint, Module } from './types-typebox'
 
 export const loadDirectory = async () => {
     const response = await fetch(`${JUTGE_API_URL}/dir`)
@@ -16,14 +16,10 @@ export const loadDirectory = async () => {
     const resolveType = (type: any) => {
         if (type.$ref) {
             return modelMap.get(type.$ref) || type
-        } else if (
-            type.type === "object" &&
-            type.patternProperties &&
-            type.patternProperties["^(.*)$"]
-        ) {
-            const resolved = resolveType(type.patternProperties["^(.*)$"])
-            return { ...type, patternProperties: { "^(.*)$": resolved } }
-        } else if (type.type === "array") {
+        } else if (type.type === 'object' && type.patternProperties && type.patternProperties['^(.*)$']) {
+            const resolved = resolveType(type.patternProperties['^(.*)$'])
+            return { ...type, patternProperties: { '^(.*)$': resolved } }
+        } else if (type.type === 'array') {
             return { ...type, items: resolveType(type.items) }
         } else {
             return type

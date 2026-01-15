@@ -1,14 +1,13 @@
-import { JUTGE_API_URL } from "./env"
-import { ProtocolError, throwError } from "./errors"
-import { printStdout } from "./print"
-import { File } from "buffer"
+import { JUTGE_API_URL } from './env'
+import { ProtocolError, throwError } from './errors'
+import { printStdout } from './print'
+import { File } from 'buffer'
 
 export interface Download {
     readonly content: Uint8Array
     readonly name: string
     readonly type: string
 }
-
 
 export const jutgeApiCall = async (
     func: string,
@@ -20,28 +19,28 @@ export const jutgeApiCall = async (
     const iform = new FormData()
     const idata = { func, input, meta: jutgeApiCall.meta }
 
-    iform.append("data", JSON.stringify(idata))
+    iform.append('data', JSON.stringify(idata))
     for (const index in ifiles) {
         iform.append(`file_${index}`, ifiles[index])
     }
 
     if (debug) {
-        printStdout("input", idata)
+        printStdout('input', idata)
     }
 
     // send request
-    const response = await fetch(JUTGE_API_URL, { method: "POST", body: iform })
+    const response = await fetch(JUTGE_API_URL, { method: 'POST', body: iform })
 
     // process response
-    const contentType = response.headers.get("content-type")?.split(";")[0].toLowerCase()
-    if (contentType !== "multipart/form-data") {
-        throw new ProtocolError("The content type is not multipart/form-data")
+    const contentType = response.headers.get('content-type')?.split(';')[0].toLowerCase()
+    if (contentType !== 'multipart/form-data') {
+        throw new ProtocolError('The content type is not multipart/form-data')
     }
 
     const oform = await response.formData()
-    const odata = oform.get("data")
+    const odata = oform.get('data')
     if (debug) {
-        printStdout("output", odata)
+        printStdout('output', odata)
     }
 
     const { output, error, duration, operation_id, time } = JSON.parse(odata as string)

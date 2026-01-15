@@ -1,6 +1,6 @@
-import { Command } from "@commander-js/extra-typings"
-import { printStdout } from "../print"
-import { login, logout } from "./credentials-file"
+import { Command } from '@commander-js/extra-typings'
+import { printStdout } from '../print'
+import { login, logout } from './credentials-file'
 
 /*
 
@@ -43,18 +43,18 @@ using the default one.
 
 // TODO(pauek): Option to renew credentials (--renew)?
 
-export const loginCmd = new Command("login")
-    .description("Login to Jutge.org")
-    .option("-e, --email <email>", "Email")
-    .option("-p, --password <password>", "Password")
-    .option("-a, --account <name>", "Account to use (instead of the active one)")
+export const loginCmd = new Command('login')
+    .description('Login to Jutge.org')
+    .option('-e, --email <email>', 'Email')
+    .option('-p, --password <password>', 'Password')
+    .option('-a, --account <name>', 'Account to use (instead of the active one)')
     .action(async ({ account, email, password }) => {
         printStdout(await login(account, email, password))
     })
 
-export const logoutCmd = new Command("logout")
-    .description("Logout from Jutge.org")
-    .option("-a, --account <name>", "Account to use (instead of the active one)")
+export const logoutCmd = new Command('logout')
+    .description('Logout from Jutge.org')
+    .option('-a, --account <name>', 'Account to use (instead of the active one)')
     .action(async ({ account }) => {
         printStdout(await logout(account))
     })
