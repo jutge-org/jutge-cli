@@ -1,4 +1,4 @@
-import { TSchema, Type } from "@sinclair/typebox"
+import { type TSchema, Type } from '@sinclair/typebox'
 
 export const jsonSchema2Typebox = (schema: any): TSchema => {
     if (schema.anyOf) {
@@ -17,12 +17,12 @@ export const jsonSchema2Typebox = (schema: any): TSchema => {
             return Type.Object(typeboxProps)
         } else if (schema.patternProperties) {
             return Type.Object({
-                "^(.*)$": jsonSchema2Typebox(schema.patternProperties["^(.*)$"]),
+                '^(.*)$': jsonSchema2Typebox(schema.patternProperties['^(.*)$']),
             })
         } else {
             throw new Error(`Object without properties or patternProperties!`)
         }
-    } else if (schema.type === "array") {
+    } else if (schema.type === 'array') {
         return Type.Array(jsonSchema2Typebox(schema.items))
     } else if (schema.type === "string") {
         return Type.String({ ...schema })

@@ -1,7 +1,7 @@
-import { Value } from "@sinclair/typebox/value"
-import { JUTGE_API_URL } from "../env"
-import { jsonSchema2Typebox } from "./json-schema-to-typebox"
-import { ApiDir, Endpoint, Module } from "./types-typebox"
+import { Value } from '@sinclair/typebox/value'
+import { JUTGE_API_URL } from '../env'
+import { jsonSchema2Typebox } from './json-schema-to-typebox'
+import { ApiDir, Endpoint, Module } from './types-typebox'
 
 export const loadDirectory = async () => {
     const response = await fetch(`${JUTGE_API_URL}/dir`)

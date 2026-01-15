@@ -1,14 +1,14 @@
-import { Command } from "@commander-js/extra-typings"
-import { Static, Type } from "@sinclair/typebox"
-import { Value } from "@sinclair/typebox/value"
-import { File } from "buffer"
-import { existsSync } from "fs"
-import { readFile, writeFile } from "fs/promises"
-import { basename, extname } from "path"
-import { applyCredentials, getDefaultFormat } from "./auth/credentials-file"
-import { Endpoint, Module } from "./directory/types-typebox"
-import { UnauthorizedError } from "./errors"
-import { Download, jutgeApiCall } from "./jutge-api-call"
+import { Command } from '@commander-js/extra-typings'
+import { type Static, Type } from '@sinclair/typebox'
+import { Value } from '@sinclair/typebox/value'
+import { File } from 'buffer'
+import { existsSync } from 'fs'
+import { readFile, writeFile } from 'fs/promises'
+import { basename, extname } from 'path'
+import { applyCredentials, getDefaultFormat } from './auth/credentials-file'
+import { Endpoint, Module } from './directory/types-typebox'
+import { UnauthorizedError } from './errors'
+import { type Download, jutgeApiCall } from './jutge-api-call'
 import {
     isArrayOfObjects,
     isDictionaryOfObjects,
@@ -18,9 +18,9 @@ import {
     printJson,
     printObject as printObjectTable,
     printYaml,
-} from "./output"
-import { printStdout } from "./print"
-import { isEmptyObject } from "./utils"
+} from './output'
+import { printStdout } from './print'
+import { isEmptyObject } from './utils'
 
 export const TTestcase = Type.Object({
     name: Type.String(),
@@ -29,10 +29,10 @@ export const TTestcase = Type.Object({
 })
 type Testcase = Static<typeof TTestcase>
 
-export type OutputFormat = "json" | "table" | "yaml" | "csv" | "raw" | null
+export type OutputFormat = 'json' | 'table' | 'yaml' | 'csv' | 'raw' | null
 
 const getDescription = (description: string | undefined | null) =>
-    description ? description.split(`\n`)[0] : "<undocumented>"
+    description ? description.split(`\n`)[0] : '<undocumented>'
 
 const writeOutputFile = async (filename: string, content: any) => {
     if (existsSync(filename)) {
@@ -51,43 +51,39 @@ const writeOutputFile = async (filename: string, content: any) => {
 const writeTestcase = async (testcases: Testcase[]) => {
     for (const testcase of testcases) {
         const { name, input_b64, correct_b64 } = testcase
-        const base = name.replace(/.inp$/, "")
-        await writeOutputFile(`${base}.inp`, Buffer.from(input_b64, "base64"))
-        await writeOutputFile(`${base}.cor`, Buffer.from(correct_b64, "base64"))
+        const base = name.replace(/.inp$/, '')
+        await writeOutputFile(`${base}.inp`, Buffer.from(input_b64, 'base64'))
+        await writeOutputFile(`${base}.cor`, Buffer.from(correct_b64, 'base64'))
     }
 }
 
 const parseOptionValue = (tschema: any, value: any) => {
-    if (tschema.type === "object" || tschema.type === "array") {
+    if (tschema.type === 'object' || tschema.type === 'array') {
         // First convert value to a Javascript object from JSON
         value = JSON.parse(value)
     }
     return Value.Parse(tschema, value)
 }
 
-const parseArgs = async (
-    args: any[],
-    rawOptions: Record<string, string> | null,
-    endpoint: Endpoint,
-) => {
+const parseArgs = async (args: any[], rawOptions: Record<string, string> | null, endpoint: Endpoint) => {
     if (rawOptions && Object.keys(rawOptions).length === 0) {
         rawOptions = null
     }
 
-    let inputFiles: File[] = []
+    const inputFiles: File[] = []
     let params: any[] = []
     let options: Record<string, any> = {}
 
     const { input, ifiles, ofiles } = endpoint
 
-    if (ifiles === "one") {
+    if (ifiles === 'one') {
         // The last argument is the file
         const filename = args[args.length - 1]
         const bytes = await readFile(filename)
         inputFiles.push(new File([bytes], basename(filename)))
     }
 
-    if (ofiles === "one" && rawOptions?.output) {
+    if (ofiles === 'one' && rawOptions?.output) {
         options = { output: rawOptions?.output }
     }
 
@@ -96,16 +92,16 @@ const parseArgs = async (
         switch (key) {
             // All these options do not appear in the API directory, we added
             // them a posteriori, so they don't have an associated schema
-            case "json":
-            case "table":
-            case "yaml":
-            case "csv":
-            case "raw":
-            case "debug":
+            case 'json':
+            case 'table':
+            case 'yaml':
+            case 'csv':
+            case 'raw':
+            case 'debug':
                 options[key] = Value.Parse(Type.Boolean(), rawOptions![key])
                 break
-            case "account":
-            case "output": {
+            case 'account':
+            case 'output': {
                 options[key] = Value.Parse(Type.String(), rawOptions![key])
                 break
             }
@@ -115,7 +111,7 @@ const parseArgs = async (
         }
     }
 
-    if (input.type === "object") {
+    if (input.type === 'object') {
         // The properties are the options in the command
         if (input.properties) {
             let required = new Set<string>()
@@ -134,9 +130,9 @@ const parseArgs = async (
                 options[key] = value
             }
         } else if (input.patternProperties) {
-            throw new Error("Not implemented")
+            throw new Error('Not implemented')
         }
-    } else if (input.type === "void") {
+    } else if (input.type === 'void') {
         // NOTE(pauek): Is 'void' part of JSON Schema?
         // In the API, the input is a single thing.
         // There can't be more than one parameter
@@ -168,7 +164,7 @@ const showResultDeducingFormat = async (output: any) => {
         printDictionaryAsTable(output)
     } else if (isArrayOfObjects(output)) {
         printArrayAsTable(output)
-    } else if (typeof output === "object") {
+    } else if (typeof output === 'object') {
         printObjectTable(output)
     } else {
         printStdout(output)
@@ -180,7 +176,7 @@ const printTable = async (output: any) => {
         printDictionaryAsTable(output)
     } else if (isArrayOfObjects(output)) {
         printArrayAsTable(output)
-    } else if (typeof output === "object") {
+    } else if (typeof output === 'object') {
         printObjectTable(output)
     } else {
         printStdout(`warning: data does not seem to fit into a table`)
@@ -193,18 +189,18 @@ const showResult = async (output: any, format: OutputFormat) => {
 
     const wantFormat = (f: OutputFormat) => format === f || (format === null && userDefault === f)
 
-    if (wantFormat("raw")) {
+    if (wantFormat('raw')) {
         printStdout(output)
-    } else if (wantFormat("json")) {
+    } else if (wantFormat('json')) {
         printJson(output)
-    } else if (wantFormat("yaml")) {
+    } else if (wantFormat('yaml')) {
         printYaml(output)
-    } else if (wantFormat("csv")) {
+    } else if (wantFormat('csv')) {
         printCsv(output)
-    } else if (wantFormat("table")) {
-        printTable(output)
+    } else if (wantFormat('table')) {
+        await printTable(output)
     } else {
-        showResultDeducingFormat(output)
+        await showResultDeducingFormat(output)
     }
 }
 
@@ -220,10 +216,7 @@ const writeOutputFiles = async (ofiles: Download[], outputFile: string | null) =
     }
 }
 
-const processSpecialOptions = async (
-    endpoint: Endpoint,
-    parsedOptions: Record<string, any> | null,
-) => {
+const processSpecialOptions = async (endpoint: Endpoint, parsedOptions: Record<string, any> | null) => {
     let options: Record<string, any> | null = parsedOptions === null ? null : { ...parsedOptions }
     let outputFile: string | null = null
     let format: OutputFormat = null
@@ -242,20 +235,20 @@ const processSpecialOptions = async (
         if (options && options.account) {
             // Treat -a, --account specially
             await applyCredentials(options.account)
-            deleteOption("account")
+            deleteOption('account')
         } else {
             await applyCredentials()
         }
     }
 
     // Also treat -o, --output specially
-    if (endpoint.ofiles === "one" && options && options.output) {
+    if (endpoint.ofiles === 'one' && options && options.output) {
         outputFile = options.output
-        deleteOption("output")
+        deleteOption('output')
     }
 
     // Boolean options
-    for (const fmt of ["json", "table", "yaml", "csv", "raw"]) {
+    for (const fmt of ['json', 'table', 'yaml', 'csv', 'raw']) {
         if (options && options[fmt]) {
             format = fmt as OutputFormat
             deleteOption(fmt)
@@ -263,43 +256,38 @@ const processSpecialOptions = async (
     }
     if (options && options.debug) {
         debug = true
-        deleteOption("debug")
+        deleteOption('debug')
     }
 
     return { options, outputFile, format, debug }
 }
 
-const callApi =
-    (funcName: string, endpoint: Endpoint) =>
-    async (args: any[], rawOptions: Record<string, any>) => {
-        const parsed = await parseArgs(args, rawOptions, endpoint)
-        const { options, outputFile, format, debug } = await processSpecialOptions(
-            endpoint,
-            parsed.options,
-        )
+const callApi = (funcName: string, endpoint: Endpoint) => async (args: any[], rawOptions: Record<string, any>) => {
+    const parsed = await parseArgs(args, rawOptions, endpoint)
+    const { options, outputFile, format, debug } = await processSpecialOptions(endpoint, parsed.options)
 
-        try {
-            let input: any = options === null ? parsed.params[0] : options
+    try {
+        const input: any = options === null ? parsed.params[0] : options
 
-            const [output, ofiles] = await jutgeApiCall(funcName, input, parsed.ifiles, debug)
+        const [output, ofiles] = await jutgeApiCall(funcName, input, parsed.ifiles, debug)
 
-            await showResult(output, format)
-            await writeOutputFiles(ofiles, outputFile)
-        } catch (e) {
-            if (e instanceof UnauthorizedError) {
-                console.error("Unauthorized")
-            } else {
-                console.error("error:", e.message)
-            }
+        await showResult(output, format)
+        await writeOutputFiles(ofiles, outputFile)
+    } catch (e) {
+        if (e instanceof UnauthorizedError) {
+            console.error('Unauthorized')
+        } else {
+            console.error('error:', e.message)
         }
     }
+}
 
 const addArgument = (cmd: Command, input: any) => {
     cmd.argument(`<${input.param}>`, getDescription(input.description))
 }
 
 const addInputFile = (cmd: Command) => {
-    cmd.argument("<file>", "Input file")
+    cmd.argument('<file>', 'Input file')
 }
 
 const addEndpointOptions = (endpointCmd: Command, endpoint: Endpoint) => {
@@ -307,8 +295,8 @@ const addEndpointOptions = (endpointCmd: Command, endpoint: Endpoint) => {
     const properties = Object.entries(endpoint.input.properties) as [string, any][]
     for (const [key, prop] of properties) {
         const isRequired = required.has(key)
-        const description = getDescription(prop.description) + (isRequired ? " (required)" : "")
-        const dashes = key.length === 1 ? "-" : "--"
+        const description = getDescription(prop.description) + (isRequired ? ' (required)' : '')
+        const dashes = key.length === 1 ? '-' : '--'
         if (isRequired) {
             endpointCmd.requiredOption(`${dashes}${key} <${prop.type}>`, description)
         } else {
@@ -318,7 +306,7 @@ const addEndpointOptions = (endpointCmd: Command, endpoint: Endpoint) => {
 }
 
 const endpointCommand = (funcName: string, endpoint: Endpoint) => {
-    const cmd = new Command(endpoint.name).description(endpoint.summary || "<undocumented>")
+    const cmd = new Command(endpoint.name).description(endpoint.summary || '<undocumented>')
     let numArgs = 0
 
     if (endpoint.input.param) {
@@ -327,47 +315,47 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
             description: endpoint.input.description,
         })
         numArgs++
-    } else if (endpoint.input.type === "string") {
+    } else if (endpoint.input.type === 'string') {
         addArgument(cmd, {
-            param: "string",
+            param: 'string',
             description: endpoint.input.description,
         })
         numArgs++
     }
-    if (endpoint.input.type === "object" && endpoint.input.properties) {
+    if (endpoint.input.type === 'object' && endpoint.input.properties) {
         addEndpointOptions(cmd, endpoint)
     }
     if (endpoint.actor !== undefined) {
-        cmd.option("--account <name>", "Account to use (instead of the active one)")
+        cmd.option('--account <name>', 'Account to use (instead of the active one)')
     }
-    if (endpoint.ifiles === "one") {
+    if (endpoint.ifiles === 'one') {
         addInputFile(cmd)
-        numArgs++;
+        numArgs++
     }
-    if (endpoint.ofiles === "one") {
-        cmd.option("-o, --output <filename>", "Override output filename")
+    if (endpoint.ofiles === 'one') {
+        cmd.option('-o, --output <filename>', 'Override output filename')
     }
     // TODO(pauek): More files??
 
     if (endpoint.output) {
-        cmd.option("--table", "Output in table format")
-        cmd.option("--json", "Output in JSON format")
-        cmd.option("--yaml", "Output in YAML format")
-        cmd.option("--csv", "Output in CSV format")
-        cmd.option("--raw", "Output without formatting")
+        cmd.option('--table', 'Output in table format')
+        cmd.option('--json', 'Output in JSON format')
+        cmd.option('--yaml', 'Output in YAML format')
+        cmd.option('--csv', 'Output in CSV format')
+        cmd.option('--raw', 'Output without formatting')
     }
 
-    cmd.option("--debug", "Show debug information")
+    cmd.option('--debug', 'Show debug information')
 
     // cmd.action(showArgsAndOptions(funcName))
-    cmd.action((...args) => {
+    cmd.action(async (...args) => {
         // showArgsAndOptions(funcName, endpoint)(...args)
-        callApi(funcName, endpoint)(args.slice(0, numArgs), args[numArgs])
+        await callApi(funcName, endpoint)(args.slice(0, numArgs), args[numArgs])
     })
     return cmd
 }
 
-export const moduleCommand = (module: Module, rootName: string = "") => {
+export const moduleCommand = (module: Module, rootName: string = '') => {
     const prefix = rootName ? `${rootName}.` : ``
     const name = `${prefix}${module.name}`
 

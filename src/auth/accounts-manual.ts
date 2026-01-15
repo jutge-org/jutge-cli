@@ -1,8 +1,8 @@
-import chalk from 'chalk';
+import chalk from 'chalk'
 
-const Command = chalk.yellow;
-const Output = chalk.green;
-const Title = chalk.bold.blue;
+const Command = chalk.yellow
+const Output = chalk.green
+const Title = chalk.bold.blue
 
 export const accountsManualText: string = `
 ${Title(`Command Line Interface (CLI)`)}

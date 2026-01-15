@@ -1,4 +1,3 @@
-
 export type FilesOptions = 'none' | 'one' | 'many'
 
 export type ApiModels = [string, any][]

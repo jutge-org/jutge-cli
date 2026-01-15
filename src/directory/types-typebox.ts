@@ -3,14 +3,10 @@
 // The only modification was to reorder the declarations since
 // they are produced in a the wrong order.
 
-import { Type, Static } from "@sinclair/typebox"
+import { Type, type Static } from '@sinclair/typebox'
 
 export type FilesOptions = Static<typeof FilesOptions>
-export const FilesOptions = Type.Union([
-    Type.Literal("none"),
-    Type.Literal("one"),
-    Type.Literal("many"),
-])
+export const FilesOptions = Type.Union([Type.Literal('none'), Type.Literal('one'), Type.Literal('many')])
 
 export type ApiModels = Static<typeof ApiModels>
 export const ApiModels = Type.Array(Type.Tuple([Type.String(), Type.Any()]))

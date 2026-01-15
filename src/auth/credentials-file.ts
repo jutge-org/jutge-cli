@@ -1,21 +1,23 @@
-import { input, password as inputPassword } from "@inquirer/prompts"
-import { Static, Type } from "@sinclair/typebox"
-import { Value } from "@sinclair/typebox/value"
-import chalk from "chalk"
-import { existsSync } from "fs"
-import { mkdir, readFile, writeFile } from "fs/promises"
-import { jutgeApiCall, setAPIToken } from "../jutge-api-call"
-import { OutputFormat } from "../module-cmd"
-import { printStdout } from "../print"
+import { input, password as inputPassword } from '@inquirer/prompts'
+import { type Static, Type } from '@sinclair/typebox'
+import { Value } from '@sinclair/typebox/value'
+import chalk from 'chalk'
+import { existsSync } from 'fs'
+import { exists, readFile, rename, writeFile } from 'fs/promises'
+import { join } from 'path'
+import { jutgeApiCall, setAPIToken } from '../jutge-api-call'
+import { type OutputFormat } from '../module-cmd'
+import { printStdout } from '../print'
+import { paths } from '../settings'
 
-const formatNames = ["json", "yaml", "csv", "table", "raw"]
+const formatNames = ['json', 'yaml', 'csv', 'table', 'raw']
 
 const TFormat = Type.Union([
-    Type.Literal("json"),
-    Type.Literal("yaml"),
-    Type.Literal("csv"),
-    Type.Literal("table"),
-    Type.Literal("raw"),
+    Type.Literal('json'),
+    Type.Literal('yaml'),
+    Type.Literal('csv'),
+    Type.Literal('table'),
+    Type.Literal('raw'),
 ])
 type Format = Static<typeof TFormat>
 
@@ -34,14 +36,13 @@ const TCredentialsData = Type.Record(Type.String(), TCredentials)
 
 type CredentialsData = Static<typeof TCredentialsData>
 
-const STATE_DIR = `${process.env.HOME}/.local/state/jutge.org`
-const CREDENTIALS_FILENAME = `${STATE_DIR}/credentials.json`
-const DEFAULT_ACCOUNT_NAME = "default"
+const CREDENTIALS_FILENAME = join(paths.config, 'credentials.json')
+const DEFAULT_ACCOUNT_NAME = 'default'
 
 const DEFAULT_ACCOUNT_DATA = {
-    email: "<empty>",
-    user_uid: "<empty>",
-    token: "<empty>",
+    email: '<empty>',
+    user_uid: '<empty>',
+    token: '<empty>',
     active: true,
 }
 
@@ -68,15 +69,15 @@ const _activateAccount = (accounts: CredentialsData, activeAccountName: string) 
 
 const _ensureOneActiveAccount = (accounts: CredentialsData) => {
     // Find out which account is the first active
-    let activeAccount = ""
-    for (let [name, account] of Object.entries(accounts)) {
+    let activeAccount = ''
+    for (const [name, account] of Object.entries(accounts)) {
         if (account.active) {
             activeAccount = name
             break
         }
     }
     // If there is no active account, set the default to active
-    if (activeAccount === "") {
+    if (activeAccount === '') {
         _activateAccount(accounts, DEFAULT_ACCOUNT_NAME)
         return true
     }
@@ -84,6 +85,13 @@ const _ensureOneActiveAccount = (accounts: CredentialsData) => {
 }
 
 const _readCredentials = async (): Promise<CredentialsData> => {
+    // move old credentials file if it exists
+    const oldCredentialsPath = `${process.env.HOME}/.local/state/jutge.org/credentials.json`
+    if (await exists(oldCredentialsPath)) {
+        console.log(`Migrating old credentials file to new location...`)
+        await rename(oldCredentialsPath, CREDENTIALS_FILENAME)
+    }
+
     if (!existsSync(CREDENTIALS_FILENAME)) {
         return INITIAL_CREDENTIALS_DATA
     }
@@ -97,16 +105,13 @@ const _readCredentials = async (): Promise<CredentialsData> => {
         return credentialsData
     } catch (e) {
         // If the file is corrupted, reset it to the default
-        printStdout(
-            chalk.redBright(`Warning: error parsing credentials file, resetting to default`),
-        )
+        printStdout(chalk.redBright(`Warning: error parsing credentials file, resetting to default`))
         await _saveCredentials(INITIAL_CREDENTIALS_DATA)
         return INITIAL_CREDENTIALS_DATA
     }
 }
 
 const _saveCredentials = async (data: CredentialsData) => {
-    await mkdir(STATE_DIR, { recursive: true })
     await writeFile(CREDENTIALS_FILENAME, JSON.stringify(data, null, 2))
 }
 
@@ -142,8 +147,8 @@ export const addAccount = async (name: string, email: string): Promise<string> =
         }
         accounts[name] = {
             email,
-            user_uid: "<unknown>",
-            token: "<empty>",
+            user_uid: '<unknown>',
+            token: '<empty>',
         }
         return `Account '${name}' added`
     })
@@ -182,19 +187,15 @@ export const getAllAccounts = async (): Promise<Record<string, Credentials>> => 
 }
 
 const getAndSaveEmail = async (accountName: string, account: Credentials, email?: string) => {
-    if (account.email === "<empty>") {
+    if (account.email === '<empty>') {
         // Prompt for email if we don't have it
-        account.email = email || (await input({ message: "email:" }))
+        account.email = email || (await input({ message: 'email:' }))
     } else if (email && account.email !== email) {
-        printStdout(
-            chalk.yellowBright(`Warning: changing email from '${account.email}' to '${email}'.`),
-        )
+        printStdout(chalk.yellowBright(`Warning: changing email from '${account.email}' to '${email}'.`))
         account.email = email
     } else if (email && account.email === email) {
         printStdout(
-            chalk.yellowBright(
-                `Note: email for account ${accountName} is already '${email}', you can omit it.`,
-            ),
+            chalk.yellowBright(`Note: email for account ${accountName} is already '${email}', you can omit it.`),
         )
     }
     return account.email
@@ -205,24 +206,20 @@ const getSavedPassword = (account: Credentials) => {
     if (rawSavedPassword === undefined) {
         return undefined
     }
-    return Buffer.from(rawSavedPassword, "base64").toString()
+    return Buffer.from(rawSavedPassword, 'base64').toString()
 }
 
 export const getPassword = async (account: Credentials, _password?: string): Promise<string> => {
     const savedPassword = getSavedPassword(account)
     if (_password) {
         if (savedPassword) {
-            printStdout(
-                chalk.yellowBright(
-                    `Warning: password provided as argument, ignoring saved password.`,
-                ),
-            )
+            printStdout(chalk.yellowBright(`Warning: password provided as argument, ignoring saved password.`))
         }
         return _password
     } else if (savedPassword) {
         return savedPassword
     }
-    const typedPassword = await inputPassword({ message: "password:" })
+    const typedPassword = await inputPassword({ message: 'password:' })
     return typedPassword
 }
 
@@ -233,7 +230,7 @@ type LoginCallResult = {
     error?: string
 }
 export const loginCall = async (email: string, password: string): Promise<LoginCallResult> => {
-    const [result] = await jutgeApiCall("auth.login", { email, password })
+    const [result] = await jutgeApiCall('auth.login', { email, password })
     return result
 }
 
@@ -243,11 +240,7 @@ const setToken = (account: Credentials, result: LoginCallResult) => {
     account.expiration = result.expiration
 }
 
-export const login = async (
-    accountName: string | undefined,
-    _email?: string,
-    _password?: string,
-): Promise<string> => {
+export const login = async (accountName: string | undefined, _email?: string, _password?: string): Promise<string> => {
     const accounts = await _readCredentials()
 
     if (accountName === undefined) {
@@ -257,7 +250,7 @@ export const login = async (
     }
 
     const account = accounts[accountName]
-    if (account.token !== "<empty>") {
+    if (account.token !== '<empty>') {
         if (account.expiration === undefined) {
             throw new Error(`ERROR: Token present but no expiration time.`)
         }
@@ -284,7 +277,7 @@ export const login = async (
 
         return `Logged in as '${account.email}' ('${accountName}' account).`
     } catch (e) {
-        if (e.name === "ExitPromptError") {
+        if (e.name === 'ExitPromptError') {
             return `interrupted`
         }
         throw e
@@ -300,10 +293,10 @@ export const logout = async (accountName: string | undefined) => {
         }
 
         const account = accounts[accountName]
-        if (account.token === "<empty>") {
+        if (account.token === '<empty>') {
             return `Already logged out of '${accountName}' (${account.email})`
         }
-        account.token = "<empty>"
+        account.token = '<empty>'
         delete account.expiration
 
         return `Logged out of '${accountName}' (${account.email})`
@@ -311,7 +304,7 @@ export const logout = async (accountName: string | undefined) => {
 }
 
 export const isLoggedIn = (account: Credentials) => {
-    if (account.token === "<empty>") {
+    if (account.token === '<empty>') {
         return false
     }
     if (account.expiration === undefined) {
@@ -322,7 +315,7 @@ export const isLoggedIn = (account: Credentials) => {
 
 export const tryAutoLoginWithSavedPassword = async (account: Credentials) => {
     const email = account.email
-    if (email === "<empty>") {
+    if (email === '<empty>') {
         return null
     }
     const savedPassword = getSavedPassword(account)
@@ -342,7 +335,7 @@ export const tryAutoLoginWithSavedPassword = async (account: Credentials) => {
     }
 }
 
-export const applyCredentials = async (accountName?: string | undefined) => {
+export const applyCredentials = async (accountName?: string) => {
     return await withPersistentAccounts(async (accounts) => {
         if (accountName === undefined) {
             accountName = _getActiveAccountName(accounts)
@@ -352,7 +345,7 @@ export const applyCredentials = async (accountName?: string | undefined) => {
             printStdout(chalk.redBright(`Warning: account '${accountName}' does not exist`))
             return
         }
-        if (account.token && account.token !== "<empty>") {
+        if (account.token && account.token !== '<empty>') {
             const now = new Date()
             if (account.expiration && account.expiration > now) {
                 setAPIToken(account.token)
@@ -404,13 +397,11 @@ export const saveAccountPassword = async (accountName: string | undefined) => {
             return `Account '${accountName}' does not exist`
         }
         console.log(
-            chalk.yellow(
-                `WARNING: The password you type will be stored in plain text in the credentials file.`,
-            ),
+            chalk.yellow(`WARNING: The password you type will be stored in plain text in the credentials file.`),
         )
         console.log(`Saving password for account '${accountName}' (${account.email}):`)
-        const password = await inputPassword({ message: "password:" })
-        account.savedPassword = Buffer.from(password).toString("base64")
+        const password = await inputPassword({ message: 'password:' })
+        account.savedPassword = Buffer.from(password).toString('base64')
         return `Password saved.`
     })
 }
