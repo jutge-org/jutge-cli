@@ -58,12 +58,12 @@ const _activateAccount = (accounts: CredentialsData, activeAccountName: string) 
         return
     }
     // Ensure only the active account is really active
-    for (const name in accounts) {
+    for (const [name, account] of Object.entries(accounts)) {
         if (name === activeAccountName) {
-            accounts[name].active = true
+            account.active = true
             continue
         }
-        delete accounts[name].active
+        delete account.active
     }
 }
 
@@ -123,7 +123,7 @@ const withPersistentAccounts = async <T>(fn: (accounts: CredentialsData) => Prom
 }
 
 export const _getActiveAccountName = (accounts: CredentialsData): string => {
-    const name = Object.keys(accounts).find((name) => accounts[name].active)
+    const name = Object.keys(accounts).find((name) => accounts[name]?.active)
     if (!name) {
         throw new Error(`No active account!`)
     }
@@ -176,7 +176,7 @@ export const renameAccount = async (name: string, newName: string): Promise<stri
         if (name === DEFAULT_ACCOUNT_NAME) {
             return `Cannot rename the '${DEFAULT_ACCOUNT_NAME}' account`
         }
-        accounts[newName] = accounts[name]
+        accounts[newName] = accounts[name]!
         delete accounts[name]
         return `Account '${name}' renamed to '${newName}'`
     })
@@ -249,7 +249,7 @@ export const login = async (accountName: string | undefined, _email?: string, _p
         return `Account '${accountName}' does not exist`
     }
 
-    const account = accounts[accountName]
+    const account = accounts[accountName]!
     if (account.token !== '<empty>') {
         if (account.expiration === undefined) {
             throw new Error(`ERROR: Token present but no expiration time.`)
@@ -276,8 +276,8 @@ export const login = async (accountName: string | undefined, _email?: string, _p
         await _saveCredentials(accounts)
 
         return `Logged in as '${account.email}' ('${accountName}' account).`
-    } catch (e) {
-        if (e.name === 'ExitPromptError') {
+    } catch (e: unknown) {
+        if (e instanceof Error && e.name === 'ExitPromptError') {
             return `interrupted`
         }
         throw e
@@ -292,7 +292,7 @@ export const logout = async (accountName: string | undefined) => {
             return `Account '${accountName}' does not exist`
         }
 
-        const account = accounts[accountName]
+        const account = accounts[accountName]!
         if (account.token === '<empty>') {
             return `Already logged out of '${accountName}' (${account.email})`
         }

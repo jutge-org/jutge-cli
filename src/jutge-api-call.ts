@@ -20,9 +20,7 @@ export const jutgeApiCall = async (
     const idata = { func, input, meta: jutgeApiCall.meta }
 
     iform.append('data', JSON.stringify(idata))
-    for (const index in ifiles) {
-        iform.append(`file_${index}`, ifiles[index])
-    }
+    ifiles.forEach((file, i) => iform.append(`file_${i}`, file))
 
     if (debug) {
         printStdout('input', idata)
@@ -32,7 +30,7 @@ export const jutgeApiCall = async (
     const response = await fetch(JUTGE_API_URL, { method: 'POST', body: iform })
 
     // process response
-    const contentType = response.headers.get('content-type')?.split(';')[0].toLowerCase()
+    const contentType = response.headers.get('content-type')?.split(';')[0]?.toLowerCase()
     if (contentType !== 'multipart/form-data') {
         throw new ProtocolError('The content type is not multipart/form-data')
     }

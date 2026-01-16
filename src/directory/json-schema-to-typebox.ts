@@ -2,7 +2,7 @@ import { type TSchema, Type } from '@sinclair/typebox'
 
 export const jsonSchema2Typebox = (schema: any): TSchema => {
     if (schema.anyOf) {
-        return Type.Any(schema.anyOf.map(jsonSchema2Typebox))
+        return Type.Any((schema.anyOf as any[]).map(jsonSchema2Typebox))
     } else if (schema.type === "object") {
         if (schema.properties) {
             const required = new Set(schema.required || [])

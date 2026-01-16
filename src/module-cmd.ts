@@ -31,8 +31,13 @@ type Testcase = Static<typeof TTestcase>
 
 export type OutputFormat = 'json' | 'table' | 'yaml' | 'csv' | 'raw' | null
 
-const getDescription = (description: string | undefined | null) =>
-    description ? description.split(`\n`)[0] : '<undocumented>'
+function getDescription(description: string | undefined | null): string {
+    if (!description) {
+        return '<undocumented>';
+    }
+    const firstLine = description.split('\n')[0];
+    return firstLine ? firstLine : '<undocumented>';
+}
 
 const writeOutputFile = async (filename: string, content: any) => {
     if (existsSync(filename)) {
@@ -206,7 +211,7 @@ const showResult = async (output: any, format: OutputFormat) => {
 
 const writeOutputFiles = async (ofiles: Download[], outputFile: string | null) => {
     if (ofiles.length === 1) {
-        const { name, content } = ofiles[0]
+        const { name, content } = ofiles[0]!
         const filename = outputFile || name
         await writeOutputFile(filename, content)
     } else if (ofiles.length > 1) {
@@ -273,11 +278,13 @@ const callApi = (funcName: string, endpoint: Endpoint) => async (args: any[], ra
 
         await showResult(output, format)
         await writeOutputFiles(ofiles, outputFile)
-    } catch (e) {
+    } catch (e: unknown) {
         if (e instanceof UnauthorizedError) {
             console.error('Unauthorized')
-        } else {
+        } else if (e instanceof Error) {
             console.error('error:', e.message)
+        } else {
+            console.error('error:', e)
         }
     }
 }
@@ -292,7 +299,7 @@ const addInputFile = (cmd: Command) => {
 
 const addEndpointOptions = (endpointCmd: Command, endpoint: Endpoint) => {
     const required = new Set(endpoint.input.required || [])
-    const properties = Object.entries(endpoint.input.properties) as [string, any][]
+    const properties: [string, { description?: string; type?: string }][] = Object.entries(endpoint.input.properties)
     for (const [key, prop] of properties) {
         const isRequired = required.has(key)
         const description = getDescription(prop.description) + (isRequired ? ' (required)' : '')
@@ -350,7 +357,7 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     // cmd.action(showArgsAndOptions(funcName))
     cmd.action(async (...args) => {
         // showArgsAndOptions(funcName, endpoint)(...args)
-        await callApi(funcName, endpoint)(args.slice(0, numArgs), args[numArgs])
+        await callApi(funcName, endpoint)(args.slice(0, numArgs), (args[numArgs] ?? {}) as Record<string, any>)
     })
     return cmd
 }

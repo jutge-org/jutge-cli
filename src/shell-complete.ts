@@ -16,30 +16,28 @@ const computeAvailableOptions = (index: number, words: string[], jutgeCmd: Comma
             _log(`word is ${word}, exiting loop.`)
             break
         }
-        const pos = currCmd.commands.findIndex((c) => c.name() === word)
-        if (pos === -1) {
+        const foundCmd = currCmd.commands.find((c) => c.name() === word)
+        if (!foundCmd) {
             _log(`   Didn't find ${word} in ${currCmd.commands.map((c) => c.name()).join(', ')}`)
             return []
         }
 
         k++
-        currCmd = currCmd.commands[pos]
+        currCmd = foundCmd
     }
     _log(`Finished loop, cmd is ${currCmd.name()}, k is ${k}`)
     // lookup the next word
     const word = words[index] || ''
     _log(`word = '${word}'`)
     const result: string[] = []
-    for (let i = 0; i < currCmd.commands.length; i++) {
-        const subcmd = currCmd.commands[i]
+    for (const subcmd of currCmd.commands) {
         _log(`Considering '${subcmd.name()}'`)
         if (subcmd.name().startsWith(word)) {
             _log(`  Added ${subcmd.name()}`)
             result.push(subcmd.name())
         }
     }
-    for (let i = 0; i < currCmd.options.length; i++) {
-        const option = currCmd.options[i]
+    for (const option of currCmd.options) {
         if (option.long) {
             _log(`Considering '${option.long}'`)
             if (option.long.startsWith(word)) {

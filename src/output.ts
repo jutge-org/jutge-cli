@@ -45,13 +45,16 @@ export const printDictionaryAsTable = (data: Record<string, Record<string, any>>
 }
 
 export const printArrayAsTable = (data: Record<string, any>[]) => {
-    const head = Object.keys(data[0])
+    const first = data[0]
+    if (!first) return
+
+    const head = Object.keys(first)
 
     // Compute the maximum widths and truncate them if they are too long
     let maxWidths = head.map((h) => h.length + 2)
     for (const value of data) {
         const lengths = Object.values(value).map((x) => String(x).length + 2)
-        maxWidths = maxWidths.map((mx, j) => Math.max(mx, lengths[j]))
+        maxWidths = maxWidths.map((mx, j) => Math.max(mx, lengths[j] ?? 0))
     }
     // Compute the max width of the '#' (index) column
     const indexWidth = String(data.length).length + 2
@@ -59,8 +62,8 @@ export const printArrayAsTable = (data: Record<string, any>[]) => {
 
     // Create the table and fill it
     const table = new Table({ head: ['#', ...head], wordWrap: true, colWidths })
-    for (let i = 0; i < data.length; i++) {
-        table.push([i + 1, ...Object.values(data[i])])
+    for (const [i, row] of data.entries()) {
+        table.push([i + 1, ...Object.values(row)])
     }
 
     // Print it
@@ -77,7 +80,7 @@ export const printObject = (data: Record<string, any>) => {
         // Compute the maximum widths and truncate them if they are too long
         let maxWidths = [0, 0]
         for (const [key, value] of entries) {
-            maxWidths = [Math.max(maxWidths[0], key.length + 2), Math.max(maxWidths[1], strValue(value).length + 2)]
+            maxWidths = [Math.max(maxWidths[0]!, key.length + 2), Math.max(maxWidths[1]!, strValue(value).length + 2)]
         }
         const colWidths = maxWidths.map((x) => Math.min(x, MAX_COL_WIDTH))
 

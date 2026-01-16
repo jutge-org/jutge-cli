@@ -13,21 +13,21 @@ export const loadDirectory = async () => {
 
     // Resolve references
 
-    const resolveSchema = (schema: any) => {
+    const resolveSchema = (schema: any): any => {
         if (schema.$ref) {
             return resolveSchema(modelMap.get(schema.$ref)) || schema
         } else if (schema.anyOf) {
-            return { anyOf: schema.anyOf.map(resolveSchema) }
+            return { anyOf: (schema.anyOf as any[]).map(resolveSchema) }
         } else if (
             schema.type === "object" &&
             schema.patternProperties &&
             schema.patternProperties["^(.*)$"]
         ) {
-            const resolved = resolveSchema(schema.patternProperties["^(.*)$"])
+            const resolved: any = resolveSchema(schema.patternProperties["^(.*)$"])
             return { ...schema, patternProperties: { "^(.*)$": resolved } }
         } else if (schema.type === "object" && schema.properties) {
-            const properties = Object.fromEntries(
-                Object.entries(schema.properties).map(([key, prop]) => [key, resolveSchema(prop)]),
+            const properties: any = Object.fromEntries(
+                Object.entries(schema.properties).map(([key, prop]): [string, any] => [key, resolveSchema(prop)]),
             )
             return { ...schema, properties }
         } else if (schema.type === "array") {
@@ -43,7 +43,7 @@ export const loadDirectory = async () => {
         output: jsonSchema2Typebox(resolveSchema(endpoint.output)),
     })
 
-    const resolveModule = (module: Module) => ({
+    const resolveModule = (module: Module): any => ({
         ...module,
         endpoints: module.endpoints.map(resolveEndpoint),
         submodules: module.submodules.map(resolveModule),

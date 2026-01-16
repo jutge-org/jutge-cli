@@ -1,8 +1,8 @@
-import { z } from 'zod'
 import envPaths from 'env-paths'
 import { exists, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { guessUserEmail, guessUserName, readYaml, writeYaml } from './utils'
+import { z } from 'zod'
+import { readYaml, writeYaml } from './utils'
 
 export const Settings = z.object({
     developer: z.boolean().default(false),
