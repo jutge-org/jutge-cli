@@ -13,23 +13,34 @@ export const loadDirectory = async () => {
 
     // Resolve references
 
-    const resolveType = (type: any) => {
-        if (type.$ref) {
-            return modelMap.get(type.$ref) || type
-        } else if (type.type === 'object' && type.patternProperties && type.patternProperties['^(.*)$']) {
-            const resolved = resolveType(type.patternProperties['^(.*)$'])
-            return { ...type, patternProperties: { '^(.*)$': resolved } }
-        } else if (type.type === 'array') {
-            return { ...type, items: resolveType(type.items) }
+    const resolveSchema = (schema: any) => {
+        if (schema.$ref) {
+            return resolveSchema(modelMap.get(schema.$ref)) || schema
+        } else if (schema.anyOf) {
+            return { anyOf: schema.anyOf.map(resolveSchema) }
+        } else if (
+            schema.type === "object" &&
+            schema.patternProperties &&
+            schema.patternProperties["^(.*)$"]
+        ) {
+            const resolved = resolveSchema(schema.patternProperties["^(.*)$"])
+            return { ...schema, patternProperties: { "^(.*)$": resolved } }
+        } else if (schema.type === "object" && schema.properties) {
+            const properties = Object.fromEntries(
+                Object.entries(schema.properties).map(([key, prop]) => [key, resolveSchema(prop)]),
+            )
+            return { ...schema, properties }
+        } else if (schema.type === "array") {
+            return { ...schema, items: resolveSchema(schema.items) }
         } else {
-            return type
+            return schema
         }
     }
 
     const resolveEndpoint = (endpoint: Endpoint) => ({
         ...endpoint,
-        input: jsonSchema2Typebox(resolveType(endpoint.input)),
-        output: jsonSchema2Typebox(resolveType(endpoint.output)),
+        input: jsonSchema2Typebox(resolveSchema(endpoint.input)),
+        output: jsonSchema2Typebox(resolveSchema(endpoint.output)),
     })
 
     const resolveModule = (module: Module) => ({
@@ -38,7 +49,11 @@ export const loadDirectory = async () => {
         submodules: module.submodules.map(resolveModule),
     })
 
-    return { info, root: resolveModule(root) }
+    const dirResolved = { info, root: resolveModule(root) }
+
+    await Bun.write(`dir-resolved.json`, JSON.stringify(dirResolved, null, 4))
+
+    return dirResolved
 }
 
 export type Directory = Awaited<ReturnType<typeof loadDirectory>>
