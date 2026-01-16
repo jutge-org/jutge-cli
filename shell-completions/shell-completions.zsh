@@ -1,24 +1,32 @@
 # Zsh completion for jutge CLI
 #
-# To enable, add this to your ~/.zshrc:
-#   source /path/to/shell-completions.zsh
+# RECOMMENDED: Use the built-in installer instead of sourcing this file:
 #
-# Or copy to a directory in your $fpath
+#   jutge completions install
+#
+# This will automatically:
+# - Detect your shell (bash/zsh)
+# - Install the completion script to ~/.local/share/jutge-cli/completions/
+# - Add the source line to your ~/.zshrc
+#
+# To uninstall:
+#   jutge completions uninstall
+#
+# To check status:
+#   jutge completions status
+#
+# ============================================================================
+# Manual installation (if you prefer):
+# Add this to your ~/.zshrc:
+#   source /path/to/shell-completions.zsh
+# ============================================================================
 
 _complete_jutge_zsh() {
-    # CURRENT is the 1-based index of the word being completed
-    # words is the array of words in the command line
-    # Join words into a single space-separated string
     local word_string="${words[*]}"
-    
-    # Get completions from jutge (suppress stderr)
     local completions=(${(f)"$(jutge completions "$CURRENT" "$word_string" 2>/dev/null)"})
-    
-    # Add completions
     compadd -- "${completions[@]}"
 }
 
-# Only set up if running in zsh
 if [ -n "${ZSH_VERSION:-}" ]; then
     autoload -Uz compinit
     compinit -u
