@@ -22,7 +22,7 @@ _complete_jutge_bash() {
     local index=$((COMP_CWORD + 1))
     local words="\${COMP_WORDS[*]}"
     local IFS=$'\\n'
-    local completions=($(jutge completions "\$index" "\$words" 2>/dev/null))
+    local completions=($(jutge completions "$index" "$words" 2>/dev/null))
     COMPREPLY=($(compgen -W "\${completions[*]}" -- "\${COMP_WORDS[COMP_CWORD]}"))
 }
 
