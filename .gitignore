@@ -5,3 +5,4 @@ src/client/
 dir.json
 dir-resolved.json
 .env
+dist/
