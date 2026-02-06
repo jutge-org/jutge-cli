@@ -51,8 +51,6 @@ export const loadDirectory = async () => {
 
     const dirResolved = { info, root: resolveModule(root) }
 
-    await Bun.write(`dir-resolved.json`, JSON.stringify(dirResolved, null, 4))
-
     return dirResolved
 }
 
