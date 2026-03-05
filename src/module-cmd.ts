@@ -86,6 +86,12 @@ const parseArgs = async (args: any[], rawOptions: Record<string, string> | null,
         const filename = args[args.length - 1]
         const bytes = await readFile(filename)
         inputFiles.push(new File([bytes], basename(filename)))
+    } else if (ifiles === 'many') {
+        const filenames: string[] = args[args.length - 1]
+        for (const filename of filenames) {
+            const bytes = await readFile(filename)
+            inputFiles.push(new File([bytes], basename(filename)))
+        }
     }
 
     if (ofiles === 'one' && rawOptions?.output) {
@@ -338,11 +344,13 @@ const endpointCommand = (funcName: string, endpoint: Endpoint) => {
     if (endpoint.ifiles === 'one') {
         addInputFile(cmd)
         numArgs++
+    } else if (endpoint.ifiles === 'many') {
+        cmd.argument('<files...>', 'Input files')
+        numArgs++
     }
     if (endpoint.ofiles === 'one') {
         cmd.option('-o, --output <filename>', 'Override output filename')
     }
-    // TODO(pauek): More files??
 
     if (endpoint.output) {
         cmd.option('--table', 'Output in table format')
