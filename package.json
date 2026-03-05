@@ -1,7 +1,7 @@
 {
     "name": "@jutge.org/cli",
     "description": "Jutge.org Command Line Interface",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "homepage": "https://api.jutge.org/cli",
     "author": {
         "name": "Jutge.org",
@@ -45,7 +45,8 @@
         "format": "bun prettier --write .",
         "depcheck": "bunx depcheck",
         "dev": "bun build --target bun --outfile dist/index.js ./src --watch",
-        "build": "bun build --target bun --minify --outfile dist/index.js ./src"
+        "build": "bun build --target bun --minify --outfile dist/index.js ./src",
+        "bump-version": "bun run scripts/bump-version.ts"
     },
     "dependencies": {
         "@commander-js/extra-typings": "^14.0.0",
