@@ -1,4 +1,4 @@
-import { JUTGE_API_URL } from './env'
+import { JUTGE_API_URL, JUTGE_DOMAIN } from './env'
 import { ProtocolError, throwError } from './errors'
 import { printStdout } from './print'
 import { File } from 'buffer'
@@ -27,7 +27,11 @@ export const jutgeApiCall = async (
     }
 
     // send request
-    const response = await fetch(JUTGE_API_URL, { method: 'POST', body: iform })
+    const headers: Record<string, string> = {
+        ...(JUTGE_DOMAIN ? { 'x-forwarded-host': JUTGE_DOMAIN } : {}),
+    }
+
+    const response = await fetch(JUTGE_API_URL, { method: 'POST', body: iform, headers })
 
     // process response
     const contentType = response.headers.get('content-type')?.split(';')[0]?.toLowerCase()

@@ -1,10 +1,14 @@
 import { Value } from '@sinclair/typebox/value'
-import { JUTGE_API_URL } from '../env'
+import { JUTGE_API_URL, JUTGE_DOMAIN } from '../env'
 import { jsonSchema2Typebox } from './json-schema-to-typebox'
 import { ApiDir, Endpoint, Module } from './types-typebox'
 
 export const loadDirectory = async () => {
-    const response = await fetch(`${JUTGE_API_URL}/dir`)
+    const headers: Record<string, string> = {
+        ...(JUTGE_DOMAIN ? { 'x-forwarded-host': JUTGE_DOMAIN } : {}),
+    }
+
+    const response = await fetch(`${JUTGE_API_URL}/dir`, { headers })
     const json = await response.json()
 
     const { info, models, root } = Value.Parse(ApiDir, json)
