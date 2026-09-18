@@ -1,7 +1,7 @@
 {
     "name": "@jutge.org/cli",
     "description": "Jutge.org Command Line Interface",
-    "version": "0.3.4",
+    "version": "0.3.5",
     "homepage": "https://api.jutge.org/cli",
     "author": {
         "name": "Jutge.org",
