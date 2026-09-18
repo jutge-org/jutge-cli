@@ -17,7 +17,7 @@ export const jutgeApiCall = async (
 ): Promise<[any, Download[]]> => {
     // prepare form
     const iform = new FormData()
-    const idata = { func, input, meta: jutgeApiCall.meta }
+    const idata = { func, input, meta: jutgeApiCall.meta, userAgent: 'cli' }
 
     iform.append('data', JSON.stringify(idata))
     ifiles.forEach((file, i) => iform.append(`file_${i}`, file))
