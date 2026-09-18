@@ -33,10 +33,10 @@ export type OutputFormat = 'json' | 'table' | 'yaml' | 'csv' | 'raw' | null
 
 function getDescription(description: string | undefined | null): string {
     if (!description) {
-        return '<undocumented>';
+        return '<undocumented>'
     }
-    const firstLine = description.split('\n')[0];
-    return firstLine ? firstLine : '<undocumented>';
+    const firstLine = description.split('\n')[0]
+    return firstLine ? firstLine : '<undocumented>'
 }
 
 const writeOutputFile = async (filename: string, content: any) => {
@@ -377,7 +377,7 @@ export const moduleCommand = (module: Module, rootName: string = '') => {
     const cmd = new Command(module.name)
     cmd.description(getDescription(module.description))
 
-    for (const submodule of module.submodules as Module[]) {
+    for (const submodule of module.submodules) {
         cmd.addCommand(moduleCommand(submodule, name))
     }
 
